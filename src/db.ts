@@ -148,8 +148,8 @@ export async function isArticleDuplicate(db: D1Database, url: string): Promise<b
 export async function saveArticle(db: D1Database, article: Article): Promise<void> {
   await db
     .prepare(`
-      INSERT INTO articles (source_id, source_name, category, url, title, cleaned_content, html_content, json_content, featured_image, excerpt, published_at, status, error_message)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO articles (source_id, source_name, category, url, title, cleaned_content, html_content, json_content, featured_image, excerpt, author_name, tags, published_at, status, error_message)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(url) DO UPDATE SET
         title = excluded.title,
         cleaned_content = excluded.cleaned_content,
@@ -157,6 +157,8 @@ export async function saveArticle(db: D1Database, article: Article): Promise<voi
         json_content = excluded.json_content,
         featured_image = excluded.featured_image,
         excerpt = excluded.excerpt,
+        author_name = excluded.author_name,
+        tags = excluded.tags,
         status = excluded.status,
         error_message = excluded.error_message
     `)
@@ -171,6 +173,8 @@ export async function saveArticle(db: D1Database, article: Article): Promise<voi
       article.json_content || '',
       article.featured_image || '',
       article.excerpt || '',
+      article.author_name || 'هیئت تحریریه',
+      article.tags || '',
       article.published_at || new Date().toISOString(),
       article.status,
       article.error_message || null

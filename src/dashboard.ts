@@ -4,7 +4,7 @@ export function renderDashboardHtml(): string {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>پروژه هزاردستان — ورکر اول: جمع‌آوری و استخراج وردپرس</title>
+  <title>پروژه هزاردستان — ورکر اول: استخراج ساختاریافته محتوا و WP REST API</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,28 +17,32 @@ export function renderDashboardHtml(): string {
     .custom-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
     .custom-scroll::-webkit-scrollbar-thumb:hover { background: #475569; }
 
-    /* استایل‌های استاندارد پیش‌نمایش محتوای وردپرس */
-    .wp-rendered-content { line-height: 1.85; font-size: 0.95rem; color: #cbd5e1; }
-    .wp-rendered-content h2 { font-size: 1.35rem; font-weight: 800; color: #38bdf8; margin-top: 1.5rem; margin-bottom: 0.75rem; border-right: 4px solid #38bdf8; padding-right: 0.5rem; }
-    .wp-rendered-content h3 { font-size: 1.15rem; font-weight: 700; color: #7dd3fc; margin-top: 1.25rem; margin-bottom: 0.5rem; }
-    .wp-rendered-content p { margin-bottom: 1rem; text-align: justify; }
-    .wp-rendered-content figure.wp-block-image { margin: 1.5rem 0; text-align: center; }
+    /* استایل‌های استاندارد پیش‌نمایش محتوای وردپرس (Gutenberg Standard) */
+    .wp-rendered-content { line-height: 1.9; font-size: 0.95rem; color: #cbd5e1; }
+    .wp-rendered-content h2 { font-size: 1.4rem; font-weight: 800; color: #38bdf8; margin-top: 1.75rem; margin-bottom: 0.85rem; border-right: 4px solid #38bdf8; padding-right: 0.65rem; }
+    .wp-rendered-content h3 { font-size: 1.2rem; font-weight: 700; color: #7dd3fc; margin-top: 1.4rem; margin-bottom: 0.6rem; }
+    .wp-rendered-content h4 { font-size: 1.05rem; font-weight: 600; color: #bae6fd; margin-top: 1.1rem; margin-bottom: 0.4rem; }
+    .wp-rendered-content p { margin-bottom: 1.15rem; text-align: justify; }
+    .wp-rendered-content figure.wp-block-image { margin: 1.75rem 0; text-align: center; }
     .wp-rendered-content figure.wp-block-image img { border-radius: 0.75rem; max-width: 100%; height: auto; margin: 0 auto; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.5); border: 1px solid #334155; }
     .wp-rendered-content figcaption { font-size: 0.8rem; color: #94a3b8; margin-top: 0.5rem; text-align: center; }
     .wp-rendered-content a { color: #38bdf8; text-decoration: underline; text-underline-offset: 3px; }
     .wp-rendered-content a:hover { color: #0284c7; }
-    .wp-rendered-content blockquote { border-right: 4px solid #6366f1; background: rgba(99, 102, 241, 0.08); padding: 0.75rem 1rem; border-radius: 0.5rem; margin: 1.25rem 0; color: #e2e8f0; font-style: italic; }
-    .wp-rendered-content ul { list-style-type: disc; margin-right: 1.5rem; margin-bottom: 1rem; }
-    .wp-rendered-content ol { list-style-type: decimal; margin-right: 1.5rem; margin-bottom: 1rem; }
-    .wp-rendered-content li { margin-bottom: 0.35rem; }
+    .wp-rendered-content blockquote.wp-block-quote { border-right: 4px solid #6366f1; background: rgba(99, 102, 241, 0.08); padding: 0.85rem 1.15rem; border-radius: 0.5rem; margin: 1.35rem 0; color: #e2e8f0; font-style: italic; }
+    .wp-rendered-content ul { list-style-type: disc; margin-right: 1.6rem; margin-bottom: 1.15rem; }
+    .wp-rendered-content ol { list-style-type: decimal; margin-right: 1.6rem; margin-bottom: 1.15rem; }
+    .wp-rendered-content li { margin-bottom: 0.4rem; }
+    .wp-rendered-content figure.wp-block-table table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.85rem; }
+    .wp-rendered-content figure.wp-block-table th, .wp-rendered-content figure.wp-block-table td { border: 1px solid #334155; padding: 0.5rem 0.75rem; text-align: right; }
+    .wp-rendered-content figure.wp-block-table th { background: rgba(30,41,59,0.7); color: #f1f5f9; }
   </style>
 </head>
 <body class="min-h-screen pb-20 selection:bg-cyan-500 selection:text-white">
 
-  <!-- توست پیام کپی موفق -->
+  <!-- توست پیام عملیات -->
   <div id="toastMessage" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 hidden px-5 py-2.5 rounded-xl bg-emerald-500 text-white font-medium text-sm shadow-2xl shadow-emerald-500/30 transition-all duration-300 flex items-center gap-2">
     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-    <span id="toastText">با موفقیت کپی شد!</span>
+    <span id="toastText">با موفقیت انجام شد!</span>
   </div>
 
   <!-- هدر اصلی -->
@@ -55,13 +59,13 @@ export function renderDashboardHtml(): string {
             <h1 class="text-base sm:text-lg font-black bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-sky-300 to-blue-400">
               پروژه هزاردستان
             </h1>
-            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/20">نسخه وردپرس</span>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/20">WP REST API v2</span>
           </div>
-          <p class="text-[11px] text-slate-400">ورکر اول: شکارچی، استخراج ساختاریافته محتوا و دیوان اول (D1)</p>
+          <p class="text-[11px] text-slate-400">ورکر اول: شکارچی محتوا، استخراج داده‌های آشکار و نهان وردپرس و دیتابیس D1</p>
         </div>
       </div>
 
-      <!-- دکمه‌های عملیات سریع -->
+      <!-- دکمه‌های عملیات سریع هدر -->
       <div class="flex items-center gap-2 sm:gap-3 self-end sm:self-auto w-full sm:w-auto justify-end flex-wrap">
         <button onclick="openNewSourceModal()" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 transition text-white rounded-xl text-xs sm:text-sm font-semibold shadow-md flex items-center gap-1.5">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
@@ -89,12 +93,12 @@ export function renderDashboardHtml(): string {
         <div class="absolute -left-2 -bottom-2 w-14 h-14 bg-blue-500/10 rounded-full blur-xl"></div>
       </div>
       <div class="glass-card p-4 rounded-2xl relative overflow-hidden">
-        <div class="text-[11px] text-slate-400 font-medium">منابع در حال پایش (فعال)</div>
+        <div class="text-[11px] text-slate-400 font-medium">منابع فعال در حال رصد</div>
         <div id="statActiveSources" class="text-2xl sm:text-3xl font-extrabold text-cyan-400 mt-1.5">--</div>
         <div class="absolute -left-2 -bottom-2 w-14 h-14 bg-cyan-500/10 rounded-full blur-xl"></div>
       </div>
       <div class="glass-card p-4 rounded-2xl relative overflow-hidden">
-        <div class="text-[11px] text-slate-400 font-medium">مطالب آماده پردازش (دیوان اول)</div>
+        <div class="text-[11px] text-slate-400 font-medium">مطالب کامل دیوان اول (D1)</div>
         <div id="statReadyArticles" class="text-2xl sm:text-3xl font-extrabold text-emerald-400 mt-1.5">--</div>
         <div class="absolute -left-2 -bottom-2 w-14 h-14 bg-emerald-500/10 rounded-full blur-xl"></div>
       </div>
@@ -105,7 +109,7 @@ export function renderDashboardHtml(): string {
       </div>
     </div>
 
-    <!-- آزمایشگاه تست زنده و تزریق اسکریپت با خروجی‌های چندگانه وردپرس -->
+    <!-- آزمایشگاه تست زنده استخراج با ۴ خروجی استاندارد وردپرس -->
     <section class="glass rounded-2xl p-4 sm:p-6 border border-slate-800">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-slate-800">
         <div class="flex items-center gap-2.5">
@@ -113,8 +117,8 @@ export function renderDashboardHtml(): string {
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
           </div>
           <div>
-            <h2 class="text-sm sm:text-base font-bold text-slate-100">آزمایشگاه تست زنده و موتور استخراج وردپرس</h2>
-            <p class="text-[11px] text-slate-400">استخراج خودکار عکس‌های شاخص، تصاویر داخل متن، تیترهای H2 و H3، لینک‌ها و ساختار کامل وردپرس</p>
+            <h2 class="text-sm sm:text-base font-bold text-slate-100">آزمایشگاه تست زنده استخراج رسمی وردپرس (WP REST API)</h2>
+            <p class="text-[11px] text-slate-400">استخراج داده‌های آشکار (عنوان، گوتنبرگ، عکس، نویسنده، دسته‌ها، برچسب‌ها) و نهان (سئو، اسکیما، متادیتا، FAQ)</p>
           </div>
         </div>
       </div>
@@ -123,7 +127,7 @@ export function renderDashboardHtml(): string {
         <!-- فرم تنظیمات و ورودی تست -->
         <div class="lg:col-span-5 space-y-3.5">
           <div>
-            <label class="block text-xs font-semibold text-slate-300 mb-1">اتصال به منبع (جهت ذخیره):</label>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">اتصال به منبع (جهت ذخیره قواعد):</label>
             <select id="testSourceSelect" onchange="loadSourceIntoTester()" class="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs sm:text-sm rounded-xl p-2.5 focus:border-cyan-500 focus:outline-none">
               <option value="">-- حالت تست آزاد (بدون انتساب به منبع) --</option>
             </select>
@@ -161,77 +165,75 @@ export function renderDashboardHtml(): string {
           </div>
         </div>
 
-        <!-- باکس خروجی‌های چندگانه (پیش‌نمایش بصری، HTML وردپرس، متن تمیز، JSON) -->
-        <div class="lg:col-span-7 bg-slate-950 border border-slate-800 rounded-2xl flex flex-col h-[520px] overflow-hidden">
-          
-          <!-- نوارهای تب خروجی -->
-          <div class="flex items-center justify-between px-3 pt-2 pb-0 bg-slate-900/80 border-b border-slate-800 flex-wrap gap-2">
-            <div class="flex items-center space-x-1 space-x-reverse overflow-x-auto custom-scroll text-xs">
-              <button onclick="switchOutputTab('visual')" id="tabBtnVisual" class="px-3 py-2 font-bold border-b-2 border-cyan-400 text-cyan-300 flex items-center gap-1 transition">
-                <span>👁️</span> پیش‌نمایش رندرشده
+        <!-- جعبه چند زبانه پیش‌نمایش خروجی‌های ۴ گانه -->
+        <div class="lg:col-span-7 bg-slate-950/70 border border-slate-800 rounded-2xl flex flex-col overflow-hidden min-h-[460px]">
+          <!-- هدر تب‌های آزمایشگاه -->
+          <div class="flex items-center justify-between px-3 pt-2 bg-slate-900/80 border-b border-slate-800 flex-wrap gap-2">
+            <div class="flex items-center space-x-1 space-x-reverse text-xs overflow-x-auto custom-scroll py-1">
+              <button onclick="switchOutputTab('visual')" id="tabBtnVisual" class="px-3 py-1.5 font-bold border-b-2 border-cyan-400 text-cyan-300 flex items-center gap-1 transition whitespace-nowrap">
+                <span>👁️</span> پیش‌نمایش وردپرس
               </button>
-              <button onclick="switchOutputTab('html')" id="tabBtnHtml" class="px-3 py-2 font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-1 transition">
+              <button onclick="switchOutputTab('html')" id="tabBtnHtml" class="px-3 py-1.5 font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-1 transition whitespace-nowrap">
                 <span>🌐</span> کد HTML وردپرس
               </button>
-              <button onclick="switchOutputTab('text')" id="tabBtnText" class="px-3 py-2 font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-1 transition">
-                <span>📄</span> متن خالص
+              <button onclick="switchOutputTab('text')" id="tabBtnText" class="px-3 py-1.5 font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-1 transition whitespace-nowrap">
+                <span>📄</span> متن تمیز
               </button>
-              <button onclick="switchOutputTab('json')" id="tabBtnJson" class="px-3 py-2 font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-1 transition">
-                <span>⚙️</span> خروجی JSON
+              <button onclick="switchOutputTab('json')" id="tabBtnJson" class="px-3 py-1.5 font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-1 transition whitespace-nowrap">
+                <span>⚙️</span> خروجی WP REST API JSON
               </button>
             </div>
 
-            <!-- دکمه کپی تب فعال -->
-            <button id="btnCopyActiveTab" onclick="copyCurrentTabContent()" class="text-xs px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg transition flex items-center gap-1">
+            <button onclick="copyCurrentTabContent()" class="text-xs px-2.5 py-1 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg transition font-medium flex items-center gap-1 shadow">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-              کپی خروجی
+              کپی این تب
             </button>
           </div>
 
-          <!-- بدنه تب‌ها -->
-          <div class="flex-1 overflow-hidden relative p-3">
-            
-            <!-- تب ۱: پیش‌نمایش رندرشده بصری -->
-            <div id="tabContentVisual" class="h-full overflow-y-auto custom-scroll p-3 space-y-4">
-              <div class="text-center text-slate-500 py-24 text-xs sm:text-sm">
-                لینک نمونه را وارد کرده و دکمه «تست در لحظه استخراج» را بزنید.
+          <!-- وضعیت استخراج و متادیتاهای زنده -->
+          <div class="px-4 py-2 bg-slate-900/40 border-b border-slate-800/60 flex items-center justify-between text-[11px] text-slate-400">
+            <span id="testMetaStats">منتظر ثبت آدرس و کلیک روی دکمه تست...</span>
+            <span id="testBadgeStatus" class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 text-[10px] font-bold">آماده</span>
+          </div>
+
+          <!-- محتوای ۴ تب -->
+          <div class="flex-1 p-3 sm:p-4 overflow-y-auto custom-scroll relative max-h-[560px]">
+            <!-- ۱. تب پیش‌نمایش زنده وردپرس -->
+            <div id="tabContentVisual" class="space-y-4">
+              <div class="text-center text-slate-500 py-24 text-xs">
+                یک آدرس را در فیلد سمت راست وارد کرده و دکمه «تست در لحظه استخراج» را بزنید.
               </div>
             </div>
 
-            <!-- تب ۲: کد HTML وردپرس (قابل ویرایش و کپی) -->
-            <div id="tabContentHtml" class="h-full hidden flex flex-col">
-              <textarea id="outputHtmlTextarea" class="w-full flex-1 bg-slate-900/90 text-emerald-300 font-mono text-xs p-3.5 rounded-xl border border-slate-800 focus:outline-none custom-scroll resize-none dir-ltr text-left" placeholder="کد HTML وردپرس اینجا ظاهر می‌شود..."></textarea>
+            <!-- ۲. تب کد HTML تمیز وردپرس -->
+            <div id="tabContentHtml" class="hidden h-full flex flex-col">
+              <textarea id="outputHtmlTextarea" class="w-full h-96 bg-slate-900 text-emerald-300 font-mono text-xs p-3.5 rounded-xl border border-slate-800 focus:outline-none custom-scroll resize-y dir-ltr text-left" placeholder="کد HTML استاندارد وردپرس اینجا قرار می‌گیرد..."></textarea>
             </div>
 
-            <!-- تب ۳: متن خالص بدون تگ (قابل ویرایش و کپی) -->
-            <div id="tabContentText" class="h-full hidden flex flex-col">
-              <textarea id="outputTextTextarea" class="w-full flex-1 bg-slate-900/90 text-slate-200 font-sans text-xs sm:text-sm p-3.5 rounded-xl border border-slate-800 focus:outline-none custom-scroll resize-none leading-relaxed" placeholder="متن تمیز و خالص بدون تگ اینجا ظاهر می‌شود..."></textarea>
+            <!-- ۳. تب متن خالص و تمیز -->
+            <div id="tabContentText" class="hidden h-full flex flex-col">
+              <textarea id="outputTextTextarea" class="w-full h-96 bg-slate-900 text-slate-200 font-sans text-xs sm:text-sm p-3.5 rounded-xl border border-slate-800 focus:outline-none custom-scroll resize-y leading-relaxed" placeholder="متن خالص و تمیز بدون هیچ تگی..."></textarea>
             </div>
 
-            <!-- تب ۴: خروجی کامل JSON (قابل ویرایش و کپی) -->
-            <div id="tabContentJson" class="h-full hidden flex flex-col">
-              <textarea id="outputJsonTextarea" class="w-full flex-1 bg-slate-900/90 text-amber-300 font-mono text-xs p-3.5 rounded-xl border border-slate-800 focus:outline-none custom-scroll resize-none dir-ltr text-left" placeholder="خروجی ساخت‌یافته JSON اینجا ظاهر می‌شود..."></textarea>
+            <!-- ۴. تب خروجی کامل JSON رسمی WP REST API -->
+            <div id="tabContentJson" class="hidden h-full flex flex-col">
+              <textarea id="outputJsonTextarea" class="w-full h-96 bg-slate-900 text-amber-300 font-mono text-xs p-3.5 rounded-xl border border-slate-800 focus:outline-none custom-scroll resize-y dir-ltr text-left" placeholder="ساختار رسمی /wp-json/wp/v2/posts اینجا قرار می‌گیرد..."></textarea>
             </div>
-
           </div>
-
-          <!-- فوتر باکس پیش‌نمایش -->
-          <div id="testFooterMeta" class="px-4 py-2 bg-slate-900/60 border-t border-slate-800 text-[11px] text-slate-400 flex items-center justify-between">
-            <span id="testMetaStats">وضعیت: آماده تست</span>
-            <span id="testBadgeStatus" class="px-2 py-0.5 rounded bg-slate-800 text-slate-400 text-[10px]">آماده</span>
-          </div>
-
         </div>
       </div>
     </section>
 
     <!-- مدیریت منابع و وب‌سایت‌های خبری -->
     <section class="glass rounded-2xl p-4 sm:p-6 border border-slate-800">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-slate-800">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-800">
         <div>
-          <h2 class="text-sm sm:text-base font-bold text-slate-100">فهرست منابع و فیدهای پایش</h2>
-          <p class="text-[11px] text-slate-400">منابع با سوییچ «فعال» به صورت خودکار توسط ترایگر Cron استخراج می‌شوند.</p>
+          <h2 class="text-sm sm:text-base font-bold text-slate-100">منابع خبری و سایت‌های در حال رصد</h2>
+          <p class="text-[11px] text-slate-400">فیدهای RSS و سلکتورهای استخراج تمیز هر رسانه</p>
         </div>
+        <button onclick="openNewSourceModal()" class="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1">
+          + افزودن منبع
+        </button>
       </div>
 
       <div class="mt-4 overflow-x-auto custom-scroll -mx-4 sm:mx-0">
@@ -239,7 +241,6 @@ export function renderDashboardHtml(): string {
           <table class="min-w-full text-right text-xs sm:text-sm divide-y divide-slate-800">
             <thead class="bg-slate-900/70 text-slate-400">
               <tr>
-                <th class="px-3 sm:px-4 py-3">شناسه</th>
                 <th class="px-3 sm:px-4 py-3">نام منبع</th>
                 <th class="px-3 sm:px-4 py-3 hidden sm:table-cell">دسته‌بندی</th>
                 <th class="px-3 sm:px-4 py-3">فید RSS</th>
@@ -249,7 +250,7 @@ export function renderDashboardHtml(): string {
             </thead>
             <tbody id="sourcesTableBody" class="divide-y divide-slate-800/60">
               <tr>
-                <td colspan="6" class="text-center py-8 text-slate-500">در حال دریافت منابع...</td>
+                <td colspan="5" class="text-center py-8 text-slate-500">در حال دریافت منابع...</td>
               </tr>
             </tbody>
           </table>
@@ -257,12 +258,12 @@ export function renderDashboardHtml(): string {
       </div>
     </section>
 
-    <!-- آخرین مطالب استخراج‌شده در دیوان اول با پیش‌نمایش اختصاصی وردپرس -->
+    <!-- آخرین مطالب استخراج‌شده در دیوان اول با ساختار وردپرس -->
     <section class="glass rounded-2xl p-4 sm:p-6 border border-slate-800">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-800">
         <div>
-          <h2 class="text-sm sm:text-base font-bold text-slate-100">آخرین مطالب استخراج‌شده در دیوان اول (D1)</h2>
-          <p class="text-[11px] text-slate-400">مطالب موفق با وضعیت «آماده پردازش» ثبت شده و آماده ارسال به وردپرس یا ورکر دوم هستند.</p>
+          <h2 class="text-sm sm:text-base font-bold text-slate-100">آخرین مطالب استخراج‌شده در دیوان اول (Cloudflare D1)</h2>
+          <p class="text-[11px] text-slate-400">تمام مطالب با ساختار رسمی WP REST API، عکس‌های شاخص، نویسندگان، برچسب‌ها و سئو ذخیره شده‌اند.</p>
         </div>
         <button onclick="loadArticles()" class="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1 self-end sm:self-auto">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
@@ -278,14 +279,16 @@ export function renderDashboardHtml(): string {
                 <th class="px-3 sm:px-4 py-3">ردیف</th>
                 <th class="px-3 sm:px-4 py-3">منبع</th>
                 <th class="px-3 sm:px-4 py-3">عنوان اصلی (تیتر)</th>
-                <th class="px-3 sm:px-4 py-3 hidden md:table-cell">تاریخ</th>
+                <th class="px-3 sm:px-4 py-3 hidden md:table-cell">نویسنده</th>
+                <th class="px-3 sm:px-4 py-3 hidden lg:table-cell">دسته و برچسب‌ها</th>
+                <th class="px-3 sm:px-4 py-3 hidden sm:table-cell">تاریخ</th>
                 <th class="px-3 sm:px-4 py-3 text-center">وضعیت</th>
                 <th class="px-3 sm:px-4 py-3 text-center">خروجی‌ها</th>
               </tr>
             </thead>
             <tbody id="articlesTableBody" class="divide-y divide-slate-800/60">
               <tr>
-                <td colspan="6" class="text-center py-8 text-slate-500">در حال بارگذاری مطالب...</td>
+                <td colspan="8" class="text-center py-8 text-slate-500">در حال بارگذاری مطالب...</td>
               </tr>
             </tbody>
           </table>
@@ -309,7 +312,7 @@ export function renderDashboardHtml(): string {
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-semibold text-slate-300 mb-1">نام منبع:</label>
-            <input type="text" id="modalName" placeholder="مثلاً: زومیت" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs sm:text-sm rounded-xl p-2.5 focus:border-cyan-500 focus:outline-none">
+            <input type="text" id="modalName" placeholder="زومیت" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs sm:text-sm rounded-xl p-2.5 focus:border-cyan-500 focus:outline-none">
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-300 mb-1">دسته‌بندی:</label>
@@ -353,10 +356,10 @@ export function renderDashboardHtml(): string {
 
   <!-- مودال نمایش کامل خروجی‌های مطلب انتخاب‌شده -->
   <div id="articleModal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-3 sm:p-6">
-    <div class="bg-slate-900 border border-slate-800 w-full max-w-4xl rounded-2xl shadow-2xl flex flex-col h-[90vh] overflow-hidden">
+    <div class="bg-slate-900 border border-slate-800 w-full max-w-5xl rounded-2xl shadow-2xl flex flex-col h-[92vh] overflow-hidden">
       
       <!-- هدر مودال -->
-      <div class="p-4 bg-slate-950/80 border-b border-slate-800 flex items-center justify-between gap-3 shrink-0">
+      <div class="p-4 bg-slate-950/90 border-b border-slate-800 flex items-center justify-between gap-3 shrink-0">
         <div class="min-w-0">
           <h3 id="modalArticleTitle" class="text-sm sm:text-base font-bold text-slate-100 truncate">تیتر مطلب</h3>
           <div class="flex items-center gap-3 text-xs text-slate-400 mt-1">
@@ -369,18 +372,18 @@ export function renderDashboardHtml(): string {
 
       <!-- تب‌های مودال -->
       <div class="flex items-center justify-between px-4 pt-2 bg-slate-900 border-b border-slate-800 shrink-0 flex-wrap gap-2">
-        <div class="flex items-center space-x-1 space-x-reverse text-xs">
-          <button onclick="switchModalTab('visual')" id="modalTabBtnVisual" class="px-3 py-2 font-bold border-b-2 border-cyan-400 text-cyan-300 flex items-center gap-1 transition">
+        <div class="flex items-center space-x-1 space-x-reverse text-xs overflow-x-auto custom-scroll py-1">
+          <button onclick="switchModalTab('visual')" id="modalTabBtnVisual" class="px-3 py-2 font-bold border-b-2 border-cyan-400 text-cyan-300 flex items-center gap-1 transition whitespace-nowrap">
             <span>👁️</span> پیش‌نمایش وردپرس
           </button>
-          <button onclick="switchModalTab('html')" id="modalTabBtnHtml" class="px-3 py-2 font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-1 transition">
+          <button onclick="switchModalTab('html')" id="modalTabBtnHtml" class="px-3 py-2 font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-1 transition whitespace-nowrap">
             <span>🌐</span> کد HTML وردپرس
           </button>
-          <button onclick="switchModalTab('text')" id="modalTabBtnText" class="px-3 py-2 font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-1 transition">
-            <span>📄</span> متن خالص
+          <button onclick="switchModalTab('text')" id="modalTabBtnText" class="px-3 py-2 font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-1 transition whitespace-nowrap">
+            <span>📄</span> متن تمیز
           </button>
-          <button onclick="switchModalTab('json')" id="modalTabBtnJson" class="px-3 py-2 font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-1 transition">
-            <span>⚙️</span> ساختار JSON
+          <button onclick="switchModalTab('json')" id="modalTabBtnJson" class="px-3 py-2 font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-1 transition whitespace-nowrap">
+            <span>⚙️</span> خروجی WP REST API JSON
           </button>
         </div>
 
@@ -393,12 +396,8 @@ export function renderDashboardHtml(): string {
       <!-- محتوای تب‌های مودال -->
       <div class="flex-1 overflow-hidden p-4 bg-slate-950">
         
-        <div id="modalContentVisual" class="h-full overflow-y-auto custom-scroll p-2 space-y-4">
-          <div id="modalFeaturedImageBox" class="hidden">
-            <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-500/10 text-purple-300 border border-purple-500/20">تصویر شاخص (Featured Image)</span>
-            <img id="modalFeaturedImage" src="" class="w-full max-h-80 object-cover rounded-xl border border-slate-800 shadow-xl mt-1.5" alt="Featured Image" />
-          </div>
-          <div id="modalRenderedBody" class="wp-rendered-content"></div>
+        <div id="modalContentVisual" class="h-full overflow-y-auto custom-scroll p-2">
+          <!-- رندر ساختار کامل وردپرس با تابع buildWordPressVisualHtml -->
         </div>
 
         <div id="modalContentHtml" class="h-full hidden flex flex-col">
@@ -423,17 +422,7 @@ export function renderDashboardHtml(): string {
     let cachedArticles = [];
     let activeOutputTab = 'visual';
     let activeModalTab = 'visual';
-
-    // اطلاعات آخرین استخراج تستی
-    let currentTestData = {
-      title: '',
-      featured_image: '',
-      html_content: '',
-      cleaned_content: '',
-      json_data: null
-    };
-
-    // اطلاعات مقاله بازشده در مودال
+    let currentTestData = null;
     let currentModalArticle = null;
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -460,48 +449,59 @@ export function renderDashboardHtml(): string {
         const res = await fetch('/api/sources');
         cachedSources = await res.json();
         renderSourcesTable();
-        updateSourceSelects();
+        populateTestSourceDropdown();
       } catch (e) {
-        console.error('خطا در بارگذاری منابع:', e);
+        console.error('خطا در دریافت منابع:', e);
       }
     }
 
     function renderSourcesTable() {
       const tbody = document.getElementById('sourcesTableBody');
       if (cachedSources.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-slate-500">هیچ منبعی ثبت نشده است. از دکمه «منبع جدید» اضافه کنید.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-slate-500">هیچ منبعی ثبت نشده است. از دکمه «منبع جدید» استفاده کنید.</td></tr>';
         return;
       }
 
       tbody.innerHTML = cachedSources.map(s => \`
         <tr class="hover:bg-slate-800/40 transition">
-          <td class="px-3 sm:px-4 py-3 text-slate-400 font-mono text-xs">\${s.id}</td>
-          <td class="px-3 sm:px-4 py-3 font-semibold text-slate-200">
-            <a href="\${s.site_url}" target="_blank" class="hover:text-cyan-400 transition">\${escapeHtml(s.name)}</a>
+          <td class="px-3 sm:px-4 py-3 font-bold text-slate-200">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full \${s.is_active ? 'bg-emerald-400' : 'bg-slate-600'}"></span>
+              \${escapeHtml(s.name)}
+            </div>
+            <a href="\${s.site_url}" target="_blank" class="text-[11px] text-cyan-400 font-mono hover:underline block truncate max-w-[180px] sm:max-w-xs">\${escapeHtml(s.site_url)}</a>
           </td>
-          <td class="px-3 sm:px-4 py-3 text-slate-400 text-xs hidden sm:table-cell">\${escapeHtml(s.category || 'عمومی')}</td>
-          <td class="px-3 sm:px-4 py-3 text-slate-400 font-mono text-xs dir-ltr truncate max-w-[140px] sm:max-w-xs">
-            <a href="\${s.rss_url}" target="_blank" class="hover:underline text-sky-400">\${escapeHtml(s.rss_url)}</a>
+          <td class="px-3 sm:px-4 py-3 text-slate-300 text-xs hidden sm:table-cell">
+            <span class="px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-300 border border-blue-500/20 text-[11px]">\${escapeHtml(s.category || 'عمومی')}</span>
+          </td>
+          <td class="px-3 sm:px-4 py-3 text-slate-400 font-mono text-xs max-w-[150px] sm:max-w-xs truncate">
+            <a href="\${s.rss_url}" target="_blank" class="hover:text-cyan-300 transition">\${escapeHtml(s.rss_url)}</a>
           </td>
           <td class="px-3 sm:px-4 py-3 text-center">
-            <button onclick="toggleSource(\${s.id}, \${s.is_active ? 0 : 1})" class="px-2.5 py-1 rounded-full text-[11px] font-bold transition \${s.is_active ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-slate-800 text-slate-400 border border-slate-700'}">
-              \${s.is_active ? 'فعال' : 'غیرفعال'}
+            <button onclick="toggleSource(\${s.id}, \${s.is_active ? 0 : 1})" class="px-2.5 py-1 rounded-full text-xs font-semibold transition \${s.is_active ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : 'bg-slate-800 text-slate-400 border border-slate-700'}">
+              \${s.is_active ? 'فعال ✓' : 'غیرفعال'}
             </button>
           </td>
-          <td class="px-3 sm:px-4 py-3 text-center space-x-1 sm:space-x-2 space-x-reverse whitespace-nowrap">
-            <button onclick="editSource(\${s.id})" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs transition">ویرایش</button>
-            <button onclick="sendToTester(\${s.id})" class="px-2 py-1 bg-cyan-600/20 hover:bg-cyan-600/40 text-cyan-300 rounded-lg text-xs transition">تست فرمول</button>
-            <button onclick="deleteSource(\${s.id})" class="px-2 py-1 bg-rose-600/20 hover:bg-rose-600/40 text-rose-300 rounded-lg text-xs transition">حذف</button>
+          <td class="px-3 sm:px-4 py-3 text-center space-x-1 space-x-reverse whitespace-nowrap">
+            <button onclick="sendToTester(\${s.id})" title="تست در آزمایشگاه" class="p-1.5 bg-cyan-600/20 hover:bg-cyan-600/40 text-cyan-300 rounded-lg transition inline-block">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            </button>
+            <button onclick="editSource(\${s.id})" title="ویرایش سلکتورها" class="p-1.5 bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 rounded-lg transition inline-block">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+            </button>
+            <button onclick="deleteSource(\${s.id})" title="حذف منبع" class="p-1.5 bg-rose-600/20 hover:bg-rose-600/40 text-rose-300 rounded-lg transition inline-block">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+            </button>
           </td>
         </tr>
       \`).join('');
     }
 
-    function updateSourceSelects() {
+    function populateTestSourceDropdown() {
       const select = document.getElementById('testSourceSelect');
       const curVal = select.value;
       select.innerHTML = '<option value="">-- حالت تست آزاد (بدون انتساب به منبع) --</option>' +
-        cachedSources.map(s => \`<option value="\${s.id}">\${escapeHtml(s.name)} (\${s.site_url})</option>\`).join('');
+        cachedSources.map(s => \`<option value="\${s.id}">\${escapeHtml(s.name)} (\${escapeHtml(s.site_url)})</option>\`).join('');
       select.value = curVal;
     }
 
@@ -629,7 +629,6 @@ export function renderDashboardHtml(): string {
       }
     }
 
-    // تغییر تب‌های خروجی در آزمایشگاه
     function switchOutputTab(tab) {
       activeOutputTab = tab;
       const tabs = ['visual', 'html', 'text', 'json'];
@@ -637,16 +636,15 @@ export function renderDashboardHtml(): string {
         const btn = document.getElementById('tabBtn' + t.charAt(0).toUpperCase() + t.slice(1));
         const content = document.getElementById('tabContent' + t.charAt(0).toUpperCase() + t.slice(1));
         if (t === tab) {
-          btn.className = 'px-3 py-2 font-bold border-b-2 border-cyan-400 text-cyan-300 flex items-center gap-1 transition';
+          btn.className = 'px-3 py-1.5 font-bold border-b-2 border-cyan-400 text-cyan-300 flex items-center gap-1 transition whitespace-nowrap';
           content.classList.remove('hidden');
         } else {
-          btn.className = 'px-3 py-2 font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-1 transition';
+          btn.className = 'px-3 py-1.5 font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-1 transition whitespace-nowrap';
           content.classList.add('hidden');
         }
       });
     }
 
-    // کپی تب فعال در آزمایشگاه
     function copyCurrentTabContent() {
       let textToCopy = '';
       if (activeOutputTab === 'html') {
@@ -665,7 +663,7 @@ export function renderDashboardHtml(): string {
       }
 
       navigator.clipboard.writeText(textToCopy).then(() => {
-        showToast('خروجی در کلیپ‌بورد کپی شد ✓');
+        showToast('محتوای تب در کلیپ‌بورد کپی شد ✓');
       });
     }
 
@@ -684,10 +682,10 @@ export function renderDashboardHtml(): string {
 
       badge.innerText = 'در حال استخراج...';
       badge.className = 'px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[10px] font-bold';
-      metaStats.innerText = 'در حال برقراری اتصال با سرور و استخراج ساختار وردپرس...';
+      metaStats.innerText = 'در حال استخراج داده‌های آشکار (گوتنبرگ، تصاویر، نویسنده) و داده‌های نهان (سئو، اسکیما)...';
       btnTest.disabled = true;
 
-      visualBox.innerHTML = '<div class="text-center text-slate-400 py-24 text-sm animate-pulse">در حال تحلیل کدهای HTML، استخراج تصاویر، تیترها و استانداردسازی برای وردپرس...</div>';
+      visualBox.innerHTML = '<div class="text-center text-slate-400 py-24 text-sm animate-pulse">در حال تحلیل کدهای HTML، ساختار گوتنبرگ، نویسنده، برچسب‌ها، اسکیما و سئو...</div>';
 
       try {
         const res = await fetch('/api/extract/test', {
@@ -709,48 +707,24 @@ export function renderDashboardHtml(): string {
           badge.innerText = 'استخراج موفق ✓';
           badge.className = 'px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-bold';
 
-          const wordCount = data.json_data ? data.json_data.word_count : 0;
-          const imgCount = data.json_data ? data.json_data.images.length : 0;
-          const headingCount = data.json_data ? data.json_data.headings.length : 0;
-          metaStats.innerText = \`تعداد کلمات: \${wordCount} | تصاویر: \${imgCount} | تیترهای H2/H3: \${headingCount}\`;
+          const wp = data.wp_post || {};
+          const wordCount = wp.stats?.word_count || 0;
+          const authorName = wp.author?.name || 'هیئت تحریریه';
+          const tagCount = wp.tags?.length || 0;
+          const faqCount = wp.schema?.faq?.length || 0;
+          metaStats.innerText = \`نویسنده: \${authorName} | کلمات: \${wordCount} | برچسب‌ها: \${tagCount} | سوالات متداول: \${faqCount}\`;
 
-          // ۱. رندر تب بصری وردپرس
-          let visualHtml = \`
-            <div class="space-y-4">
-              <div class="border-b border-slate-800 pb-3">
-                <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-300 border border-cyan-500/20">تیتر اصلی (Title)</span>
-                <h1 class="text-lg sm:text-xl font-extrabold text-white mt-1">\${escapeHtml(data.title)}</h1>
-              </div>
-          \`;
+          // ۱. تب پیش‌نمایش بصری رسمی وردپرس
+          visualBox.innerHTML = buildWordPressVisualHtml(wp, 'تست زنده', url);
 
-          if (data.featured_image) {
-            visualHtml += \`
-              <div>
-                <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-500/10 text-purple-300 border border-purple-500/20">تصویر شاخص (Featured Image)</span>
-                <img src="\${escapeHtml(data.featured_image)}" class="w-full max-h-72 object-cover rounded-xl border border-slate-800 mt-1.5 shadow-lg" alt="Featured Image" />
-              </div>
-            \`;
-          }
-
-          visualHtml += \`
-              <div class="pt-2">
-                <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">محتوای رندرشده وردپرس (WordPress Content)</span>
-                <div class="wp-rendered-content mt-3 bg-slate-900/50 p-4 rounded-xl border border-slate-800">
-                  \${data.html_content}
-                </div>
-              </div>
-            </div>
-          \`;
-          visualBox.innerHTML = visualHtml;
-
-          // ۲. پر کردن تب HTML وردپرس
+          // ۲. تب HTML تمیز گوتنبرگ
           document.getElementById('outputHtmlTextarea').value = data.html_content;
 
-          // ۳. پر کردن تب متن تمیز
+          // ۳. تب متن تمیز
           document.getElementById('outputTextTextarea').value = data.cleaned_content;
 
-          // ۴. پر کردن تب ساختار کامل JSON
-          document.getElementById('outputJsonTextarea').value = JSON.stringify(data.json_data || data, null, 2);
+          // ۴. تب ساختار کامل WP REST API JSON
+          document.getElementById('outputJsonTextarea').value = JSON.stringify(wp, null, 2);
 
         } else {
           badge.innerText = 'خطا ✗';
@@ -808,31 +782,51 @@ export function renderDashboardHtml(): string {
     function renderArticlesTable() {
       const tbody = document.getElementById('articlesTableBody');
       if (cachedArticles.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-slate-500">هنوز مطلبی در دیوان اول ذخیره نشده است. دکمه «پایش فوری» را بزنید.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center py-8 text-slate-500">هنوز مطلبی در دیوان اول ذخیره نشده است. دکمه «پایش فوری» یا «پاکسازی و استخراج مجدد» را بزنید.</td></tr>';
         return;
       }
 
-      tbody.innerHTML = cachedArticles.map((a, idx) => \`
-        <tr class="hover:bg-slate-800/40 transition">
-          <td class="px-3 sm:px-4 py-3 text-slate-400 font-mono text-xs">\${a.id || (idx + 1)}</td>
-          <td class="px-3 sm:px-4 py-3 font-semibold text-slate-300 text-xs whitespace-nowrap">\${escapeHtml(a.source_name)}</td>
-          <td class="px-3 sm:px-4 py-3 text-slate-100 font-medium max-w-[200px] sm:max-w-md truncate">
-            <a href="\${a.url}" target="_blank" class="hover:text-cyan-400 transition">\${escapeHtml(a.title || '(بدون تیتر)')}</a>
-          </td>
-          <td class="px-3 sm:px-4 py-3 text-slate-400 text-xs font-mono hidden md:table-cell whitespace-nowrap">\${formatDate(a.scraped_at)}</td>
-          <td class="px-3 sm:px-4 py-3 text-center whitespace-nowrap">
-            <span class="px-2 py-0.5 rounded-full text-[11px] font-bold \${a.status === 'آماده پردازش' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/10 text-rose-400 border border-rose-500/30'}">
-              \${escapeHtml(a.status)}
-            </span>
-          </td>
-          <td class="px-3 sm:px-4 py-3 text-center whitespace-nowrap">
-            <button onclick="viewArticleDetails(\${a.id})" class="px-2.5 py-1 bg-cyan-600/20 hover:bg-cyan-600/40 text-cyan-300 border border-cyan-500/30 rounded-lg text-xs font-semibold transition flex items-center gap-1 mx-auto">
-              <span>خروجی‌ها</span>
-              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-            </button>
-          </td>
-        </tr>
-      \`).join('');
+      tbody.innerHTML = cachedArticles.map((a, idx) => {
+        let tagList = [];
+        try {
+          tagList = JSON.parse(a.tags || '[]');
+        } catch {
+          if (a.tags) tagList = a.tags.split(',').map(t => t.trim());
+        }
+
+        return \`
+          <tr class="hover:bg-slate-800/40 transition">
+            <td class="px-3 sm:px-4 py-3 text-slate-400 font-mono text-xs">\${a.id || (idx + 1)}</td>
+            <td class="px-3 sm:px-4 py-3 font-semibold text-slate-300 text-xs whitespace-nowrap">\${escapeHtml(a.source_name)}</td>
+            <td class="px-3 sm:px-4 py-3 text-slate-100 font-medium max-w-[200px] sm:max-w-xs truncate">
+              <a href="\${a.url}" target="_blank" class="hover:text-cyan-400 transition">\${escapeHtml(a.title || '(بدون تیتر)')}</a>
+            </td>
+            <td class="px-3 sm:px-4 py-3 text-slate-300 text-xs hidden md:table-cell whitespace-nowrap">
+              <span class="inline-flex items-center gap-1">
+                <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                \${escapeHtml(a.author_name || 'هیئت تحریریه')}
+              </span>
+            </td>
+            <td class="px-3 sm:px-4 py-3 text-xs hidden lg:table-cell max-w-[200px] truncate">
+              <span class="px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-300 border border-blue-500/30 text-[10px] ml-1">\${escapeHtml(a.category || 'عمومی')}</span>
+              \${tagList.slice(0, 2).map(t => \`<span class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 text-[10px] ml-1">#\${escapeHtml(t)}</span>\`).join('')}
+              \${tagList.length > 2 ? \`<span class="text-[10px] text-slate-500">+\${tagList.length - 2}</span>\` : ''}
+            </td>
+            <td class="px-3 sm:px-4 py-3 text-slate-400 text-xs font-mono hidden sm:table-cell whitespace-nowrap">\${formatDate(a.published_at || a.scraped_at)}</td>
+            <td class="px-3 sm:px-4 py-3 text-center whitespace-nowrap">
+              <span class="px-2 py-0.5 rounded-full text-[11px] font-bold \${a.status === 'آماده پردازش' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/10 text-rose-400 border border-rose-500/30'}">
+                \${escapeHtml(a.status)}
+              </span>
+            </td>
+            <td class="px-3 sm:px-4 py-3 text-center whitespace-nowrap">
+              <button onclick="viewArticleDetails(\${a.id})" class="px-2.5 py-1 bg-cyan-600/20 hover:bg-cyan-600/40 text-cyan-300 border border-cyan-500/30 rounded-lg text-xs font-semibold transition flex items-center gap-1 mx-auto">
+                <span>خروجی‌ها</span>
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+              </button>
+            </td>
+          </tr>
+        \`;
+      }).join('');
     }
 
     // باز کردن مودال مشاهده جزئیات کامل مقاله
@@ -847,34 +841,39 @@ export function renderDashboardHtml(): string {
       currentModalArticle = a;
 
       document.getElementById('modalArticleTitle').innerText = a.title || 'بدون تیتر';
-      document.getElementById('modalArticleMeta').innerText = \`منبع: \${a.source_name} | وضعیت: \${a.status}\`;
+      document.getElementById('modalArticleMeta').innerText = \`منبع: \${a.source_name} | نویسنده: \${a.author_name || 'هیئت تحریریه'} | وضعیت: \${a.status}\`;
       document.getElementById('modalArticleLink').href = a.url;
 
-      // نمایش تصویر شاخص
-      const imgBox = document.getElementById('modalFeaturedImageBox');
-      const imgEl = document.getElementById('modalFeaturedImage');
-      if (a.featured_image) {
-        imgEl.src = a.featured_image;
-        imgBox.classList.remove('hidden');
-      } else {
-        imgBox.classList.add('hidden');
-      }
-
-      // محتوای بصری وردپرس
-      const bodyHtml = a.html_content || a.cleaned_content || (a.error_message ? '<div class="text-rose-400">خطای ثبت‌شده: ' + escapeHtml(a.error_message) + '</div>' : 'بدون محتوا');
-      document.getElementById('modalRenderedBody').innerHTML = bodyHtml;
-
-      // تب‌های کد
-      document.getElementById('modalHtmlTextarea').value = a.html_content || bodyHtml;
-      document.getElementById('modalTextTextarea').value = a.cleaned_content || '';
-      
-      let parsedJson = '';
+      let wp = null;
       try {
-        parsedJson = JSON.stringify(JSON.parse(a.json_content || '{}'), null, 2);
+        wp = JSON.parse(a.json_content || '{}');
       } catch {
-        parsedJson = a.json_content || '{}';
+        wp = {};
       }
-      document.getElementById('modalJsonTextarea').value = parsedJson;
+
+      // ۱. رندر تب بصری جامع وردپرس
+      document.getElementById('modalContentVisual').innerHTML = buildWordPressVisualHtml(wp.title ? wp : {
+        title: { rendered: a.title },
+        author: { name: a.author_name || 'هیئت تحریریه' },
+        category: a.category,
+        date: a.published_at,
+        featured_media: { source_url: a.featured_image, alt_text: a.title },
+        content: { rendered: a.html_content || a.cleaned_content },
+        excerpt: { rendered: a.excerpt },
+        tags: wp.tags || (a.tags ? JSON.parse(a.tags) : []),
+        schema: wp.schema || {},
+        meta: wp.meta || {},
+        slug: wp.slug || ''
+      }, a.source_name, a.url);
+
+      // ۲. تب HTML وردپرس
+      document.getElementById('modalHtmlTextarea').value = a.html_content || (wp.content ? wp.content.rendered : '');
+
+      // ۳. تب متن تمیز
+      document.getElementById('modalTextTextarea').value = a.cleaned_content || wp.cleaned_text || '';
+      
+      // ۴. تب ساختار رسمی WP REST API JSON
+      document.getElementById('modalJsonTextarea').value = JSON.stringify(wp, null, 2);
 
       switchModalTab('visual');
       document.getElementById('articleModal').classList.remove('hidden');
@@ -891,10 +890,10 @@ export function renderDashboardHtml(): string {
         const btn = document.getElementById('modalTabBtn' + t.charAt(0).toUpperCase() + t.slice(1));
         const content = document.getElementById('modalContent' + t.charAt(0).toUpperCase() + t.slice(1));
         if (t === tab) {
-          btn.className = 'px-3 py-2 font-bold border-b-2 border-cyan-400 text-cyan-300 flex items-center gap-1 transition';
+          btn.className = 'px-3 py-2 font-bold border-b-2 border-cyan-400 text-cyan-300 flex items-center gap-1 transition whitespace-nowrap';
           content.classList.remove('hidden');
         } else {
-          btn.className = 'px-3 py-2 font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-1 transition';
+          btn.className = 'px-3 py-2 font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-1 transition whitespace-nowrap';
           content.classList.add('hidden');
         }
       });
@@ -918,13 +917,198 @@ export function renderDashboardHtml(): string {
       }
 
       navigator.clipboard.writeText(textToCopy).then(() => {
-        showToast('با موفقیت کپی شد ✓');
+        showToast('محتوای تب در کلیپ‌بورد کپی شد ✓');
       });
+    }
+
+    // ساختار رندر بصری استاندارد وردپرس با تمام متادیتاها و اجزای آشکار و نهان
+    function buildWordPressVisualHtml(wpPost, sourceName, fallbackUrl) {
+      if (!wpPost) return '<div class="text-slate-500 p-8 text-center">محتوایی یافت نشد.</div>';
+
+      const title = (wpPost.title && wpPost.title.rendered) || wpPost.title || 'بدون تیتر';
+      const authorName = (wpPost.author && wpPost.author.name) || wpPost.author_name || 'هیئت تحریریه';
+      const authorUrl = (wpPost.author && wpPost.author.url) || '#';
+      const authorAvatar = (wpPost.author && wpPost.author.avatar) || '';
+      const datePublished = formatDate(wpPost.date || wpPost.published_at);
+      const dateModified = wpPost.modified && wpPost.modified !== wpPost.date ? formatDate(wpPost.modified) : '';
+      const categories = wpPost.categories || (wpPost.category ? [wpPost.category] : ['عمومی']);
+      let tags = wpPost.tags || [];
+      if (typeof tags === 'string') {
+        try { tags = JSON.parse(tags); } catch { tags = tags.split(','); }
+      }
+      const featuredMedia = wpPost.featured_media || { source_url: wpPost.featured_image || '' };
+      const contentHtml = (wpPost.content && wpPost.content.rendered) || wpPost.html_content || wpPost.cleaned_content || '';
+      const readingTime = (wpPost.stats && wpPost.stats.reading_time_minutes) || Math.max(1, Math.ceil((wpPost.stats?.word_count || 120) / 200));
+      const wordCount = (wpPost.stats && wpPost.stats.word_count) || (contentHtml.split(/\s+/).length);
+      const faqs = (wpPost.schema && wpPost.schema.faq) || wpPost.faq || [];
+      const seoMeta = wpPost.meta || wpPost.seo_meta || {};
+      const slug = wpPost.slug || '';
+      const canonical = (seoMeta && seoMeta.canonical_url) || wpPost.link || fallbackUrl || '#';
+
+      return \`
+        <div class="space-y-5 max-w-4xl mx-auto pb-6">
+
+          <!-- نوار دسته‌بندی‌ها -->
+          <div class="flex flex-wrap items-center gap-1.5">
+            <span class="text-[11px] font-bold text-slate-400 ml-1">دسته‌بندی‌ها:</span>
+            \${categories.map(c => \`<span class="px-2.5 py-0.5 rounded-lg bg-blue-500/15 text-blue-300 border border-blue-500/30 text-xs font-semibold">\${escapeHtml(c)}</span>\`).join('')}
+          </div>
+
+          <!-- تیتر اصلی خبر -->
+          <h1 class="text-xl sm:text-2xl lg:text-3xl font-extrabold text-white leading-snug tracking-tight">
+            \${escapeHtml(title)}
+          </h1>
+
+          <!-- نوار مشخصات نویسنده، تاریخ و زمان مطالعه -->
+          <div class="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 text-xs text-slate-300">
+            <div class="flex items-center gap-2.5">
+              \${authorAvatar ? \`<img src="\${escapeHtml(authorAvatar)}" class="w-8 h-8 rounded-full border border-slate-700 object-cover" alt="Author" />\` : \`
+              <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-cyan-600 to-blue-600 flex items-center justify-center text-white font-bold text-xs shrink-0 shadow">
+                \${escapeHtml(authorName.charAt(0) || 'ن')}
+              </div>\`}
+              <div>
+                <div class="font-bold text-slate-100 flex items-center gap-1">
+                  <span>نویسنده: \${escapeHtml(authorName)}</span>
+                  \${authorUrl && authorUrl !== '#' ? \`<a href="\${escapeHtml(authorUrl)}" target="_blank" class="text-cyan-400 hover:underline text-[10px]">(پروفایل ↗)</a>\` : ''}
+                </div>
+                <div class="text-[11px] text-slate-400 font-mono">
+                  انتشار: \${datePublished}
+                  \${dateModified ? \` | ویرایش: \${dateModified}\` : ''}
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3 text-[11px] font-mono text-slate-400 border-t sm:border-t-0 pt-2 sm:pt-0 w-full sm:w-auto justify-between sm:justify-end">
+              <span class="flex items-center gap-1">
+                <svg class="w-3.5 h-3.5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                مطالعه: \${readingTime} دقیقه
+              </span>
+              <span class="flex items-center gap-1">
+                <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                \${wordCount} کلمه
+              </span>
+              <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-sans text-[10px]">
+                منبع: \${escapeHtml(sourceName || 'اصلی')}
+              </span>
+            </div>
+          </div>
+
+          <!-- تصویر شاخص همراه با متن جایگزین و کپشن -->
+          \${featuredMedia && featuredMedia.source_url ? \`
+            <div class="rounded-2xl overflow-hidden border border-slate-800 bg-slate-900/50 shadow-xl">
+              <div class="relative">
+                <img src="\${escapeHtml(featuredMedia.source_url)}" class="w-full max-h-96 object-cover" alt="\${escapeHtml(featuredMedia.alt_text || title)}" />
+                <span class="absolute top-3 right-3 text-[10px] font-bold px-2.5 py-1 rounded-lg bg-black/80 backdrop-blur text-purple-300 border border-purple-500/30">
+                  تصویر شاخص (Featured Image)
+                </span>
+              </div>
+              <div class="p-3 bg-slate-950/80 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                <div class="text-slate-300 truncate max-w-md">
+                  <span class="font-bold text-slate-400">متن جایگزین (Alt Text):</span>
+                  <span class="text-slate-200">\${escapeHtml(featuredMedia.alt_text || title)}</span>
+                </div>
+                \${featuredMedia.caption ? \`
+                <div class="text-slate-400 text-[11px] italic">
+                  <span class="font-bold">کپشن:</span> \${escapeHtml(featuredMedia.caption)}
+                </div>\` : ''}
+              </div>
+            </div>
+          \` : ''}
+
+          <!-- محتوای اصلی رندر شده با قالب گوتنبرگ وردپرس -->
+          <div class="pt-2">
+            <div class="text-xs font-bold text-slate-400 mb-2 flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+              محتوای ساختاریافته گوتنبرگ (Gutenberg Content):
+            </div>
+            <div class="wp-rendered-content bg-slate-900/70 p-5 sm:p-7 rounded-2xl border border-slate-800">
+              \${contentHtml}
+            </div>
+          </div>
+
+          <!-- سوالات متداول (FAQ) در صورت وجود -->
+          \${faqs && faqs.length > 0 ? \`
+            <div class="p-4 sm:p-5 rounded-2xl border border-sky-500/30 bg-sky-950/20 space-y-3">
+              <div class="flex items-center justify-between pb-2 border-b border-sky-500/20">
+                <div class="flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-sky-400"></span>
+                  <h3 class="text-sm sm:text-base font-bold text-sky-200">سوالات متداول (FAQ)</h3>
+                </div>
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/30">FAQPage Schema (\${faqs.length})</span>
+              </div>
+              <div class="space-y-2">
+                \${faqs.map((f, i) => \`
+                  <details class="group p-3 rounded-xl bg-slate-900/80 border border-slate-800 text-xs">
+                    <summary class="font-bold text-slate-200 cursor-pointer list-none flex items-center justify-between">
+                      <span>\${i + 1}. \${escapeHtml(f.question)}</span>
+                      <span class="text-slate-400 transition group-open:rotate-180">▼</span>
+                    </summary>
+                    <p class="mt-2 text-slate-300 leading-relaxed pt-2 border-t border-slate-800/60">\${escapeHtml(f.answer)}</p>
+                  </details>
+                \`).join('')}
+              </div>
+            </div>
+          \` : ''}
+
+          <!-- برچسب‌ها و کلمات کلیدی (Tags Cloud) -->
+          \${tags && tags.length > 0 ? \`
+            <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800">
+              <div class="text-xs font-bold text-slate-300 mb-2 flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+                برچسب‌ها و کلمات کلیدی (Tags):
+              </div>
+              <div class="flex flex-wrap gap-1.5">
+                \${tags.map(t => \`<span class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-medium cursor-default">#\${escapeHtml(t)}</span>\`).join('')}
+              </div>
+            </div>
+          \` : ''}
+
+          <!-- جعبه بازرسی سئو، داده‌های نهان و اسکیما (SEO & Meta Inspector) -->
+          <details class="p-4 rounded-2xl border border-slate-800 bg-slate-950/70 text-xs space-y-3">
+            <summary class="font-bold text-slate-300 cursor-pointer flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                <span>تحلیل داده‌های نهان، فنی و سئو (SEO Meta & Schema)</span>
+              </div>
+              <span class="text-cyan-400 text-xs">مشاهده جزئیات سئو و اسکیما ▼</span>
+            </summary>
+
+            <div class="pt-3 space-y-3 border-t border-slate-800">
+              <!-- پیش‌نمایش در نتایج گوگل (Google SERP Preview) -->
+              <div class="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
+                <div class="text-[10px] font-bold text-slate-400 mb-1">پیش‌نمایش در نتایج جستجوی گوگل (Google SERP Preview):</div>
+                <div class="text-[11px] font-mono text-emerald-400 truncate dir-ltr text-left">\${escapeHtml(canonical)}</div>
+                <div class="text-sm font-bold text-blue-400 hover:underline mt-0.5 truncate">\${escapeHtml(seoMeta.yoast_wpseo_title || title)}</div>
+                <div class="text-xs text-slate-400 mt-1 line-clamp-2">\${escapeHtml(seoMeta.yoast_wpseo_metadesc || wpPost.excerpt?.rendered || 'بدون متا دیسکریپشن')}</div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 font-mono text-[11px]">
+                <div class="p-2.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-300">
+                  <span class="text-slate-500 font-sans">نامک (Slug): </span>
+                  <span class="text-cyan-300">\${escapeHtml(slug || 'default-slug')}</span>
+                </div>
+                <div class="p-2.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-300">
+                  <span class="text-slate-500 font-sans">نوع پست: </span>
+                  <span class="text-amber-300">\${escapeHtml(wpPost.type || 'post')}</span> (وضعیت: \${escapeHtml(wpPost.status || 'publish')})
+                </div>
+              </div>
+
+              <div class="flex flex-wrap items-center gap-2 pt-1">
+                <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 text-[10px] font-bold">NewsArticle Schema ✓</span>
+                <span class="px-2 py-0.5 rounded bg-blue-500/10 text-blue-300 border border-blue-500/20 text-[10px] font-bold">OpenGraph Tags ✓</span>
+                <span class="px-2 py-0.5 rounded bg-sky-500/10 text-sky-300 border border-sky-500/20 text-[10px] font-bold">Twitter Cards ✓</span>
+                \${faqs.length > 0 ? \`<span class="px-2 py-0.5 rounded bg-purple-500/10 text-purple-300 border border-purple-500/20 text-[10px] font-bold">FAQPage Schema ✓ (\${faqs.length})</span>\` : ''}
+              </div>
+            </div>
+          </details>
+
+        </div>
+      \`;
     }
 
     // پاکسازی کامل دیتابیس دیوان اول و استخراج مجدد و تازه
     async function clearAndReCrawl() {
-      if (!confirm('آیا از پاکسازی تمام رکوردهای قبلی و استخراج تازه و مجدد از فیدهای RSS اطمینان دارید؟\\n(مطالب قبلی حذف شده و فیدها با ساختار کامل وردپرس، عکس‌ها، تیترها و تگ‌های گوتنبرگ از نو استخراج خواهند شد)')) return;
+      if (!confirm('آیا از پاکسازی تمام رکوردهای قبلی و استخراج تازه و مجدد از فیدهای RSS اطمینان دارید؟\\n(مطالب قبلی حذف شده و فیدها با ساختار کامل وردپرس، عکس‌ها، تیترها، نویسندگان و برچسب‌ها از نو استخراج خواهند شد)')) return;
       
       const btn = document.getElementById('btnClearAndCrawl');
       if (btn) {
@@ -951,7 +1135,7 @@ export function renderDashboardHtml(): string {
       }
     }
 
-    // پایش دستی
+    // پایش دستی فیدها
     async function triggerManualCrawl() {
       const btn = document.getElementById('btnRunCrawler');
       btn.disabled = true;
@@ -960,7 +1144,7 @@ export function renderDashboardHtml(): string {
       try {
         const res = await fetch('/api/crawler/run', { method: 'POST' });
         const data = await res.json();
-        alert(\`پایش به پایان رسید!\\nمنابع بررسی‌شده: \${data.processedSources}\\nمطالب جدید استخراج‌شده: \${data.newArticlesScraped}\\nرکوردهای تکراری نادیده‌گرفته‌شده: \${data.duplicatesSkipped}\\nخطاها: \${data.errorsCount}\`);
+        alert(\`پایش فیدها با موفقیت انجام شد!\\nمنابع پایش‌شده: \${data.processedSources}\\nمطالب جدید استخراج‌شده: \${data.newArticlesScraped}\\nرکوردهای تکراری نادیده‌گرفته‌شده: \${data.duplicatesSkipped}\\nخطاها: \${data.errorsCount}\`);
         loadStats();
         loadArticles();
       } catch (e) {
@@ -982,21 +1166,32 @@ export function renderDashboardHtml(): string {
       }, 2500);
     }
 
+    function formatDate(dateStr) {
+      if (!dateStr) return '--';
+      try {
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return dateStr;
+        return d.toLocaleDateString('fa-IR', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      } catch {
+        return dateStr;
+      }
+    }
+
     function escapeHtml(str) {
       if (!str) return '';
       return String(str).replace(/[&<>"']/g, m => ({
-        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-      })[m]);
-    }
-
-    function formatDate(isoStr) {
-      if (!isoStr) return '';
-      try {
-        const d = new Date(isoStr);
-        return d.toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' }) + ' ' + d.toLocaleDateString('fa-IR');
-      } catch {
-        return isoStr;
-      }
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      }[m] || m));
     }
   </script>
 </body>

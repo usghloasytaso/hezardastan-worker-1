@@ -31,6 +31,8 @@ CREATE TABLE IF NOT EXISTS articles (
     json_content TEXT,       -- خروجی کامل و ساخت‌یافته JSON
     featured_image TEXT,     -- عکس شاخص مقاله
     excerpt TEXT,            -- چکیده مطلب
+    author_name TEXT,        -- نام نویسنده / خبرنگار
+    tags TEXT,               -- برچسب‌ها و کلمات کلیدی (JSON یا کاما)
     published_at TEXT,
     scraped_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     status TEXT NOT NULL DEFAULT 'آماده پردازش',

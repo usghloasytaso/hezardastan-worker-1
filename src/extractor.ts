@@ -2,7 +2,12 @@ import * as cheerio from 'cheerio';
 import {
   Source,
   ExtractedResult,
-  StructuredArticleJson,
+  WpRestPost,
+  WpAuthor,
+  WpFaqItem,
+  WpFeaturedMedia,
+  WpSeoMeta,
+  WpSchemaData,
   ExtractedHeading,
   ExtractedImage,
   ExtractedLink
@@ -30,33 +35,20 @@ export async function extractArticleContent(
     clearTimeout(timeoutId);
 
     if (!response.ok) {
-      return {
-        success: false,
-        title: '',
-        cleaned_content: '',
-        html_content: '',
-        featured_image: '',
-        excerpt: '',
-        error: `خطای دریافت صفحه: کد وضعیت ${response.status} (${response.statusText})`
-      };
+      return createEmptyResult(`خطای دریافت صفحه: کد وضعیت ${response.status} (${response.statusText})`, url);
     }
 
     const html = await response.text();
     return cleanAndParseHtml(html, source, url);
   } catch (err: any) {
     clearTimeout(timeoutId);
-    return {
-      success: false,
-      title: '',
-      cleaned_content: '',
-      html_content: '',
-      featured_image: '',
-      excerpt: '',
-      error: `عدم پاسخگویی یا خطای شبکه: ${err.message || String(err)}`
-    };
+    return createEmptyResult(`عدم پاسخگویی یا خطای شبکه: ${err.message || String(err)}`, url);
   }
 }
 
+/**
+ * پردازش جامع و استخراج تمامی داده‌های آشکار، نهان و سئوی ساختاریافته وردپرس
+ */
 export function cleanAndParseHtml(
   html: string,
   source: Partial<Source>,
@@ -65,33 +57,117 @@ export function cleanAndParseHtml(
   try {
     const $ = cheerio.load(html);
 
-    // ۱. استخراج تصویر شاخص (Featured Image)
-    let featuredImage =
-      $('meta[property="og:image"]').attr('content') ||
-      $('meta[name="twitter:image"]').attr('content') ||
-      $('link[rel="image_src"]').attr('href') ||
-      '';
-    if (featuredImage && baseUrl) {
-      featuredImage = resolveUrl(featuredImage, baseUrl);
-    }
+    // =========================================================================
+    // ۱. استخراج داده‌های ساخت‌یافته JSON-LD (NewsArticle, Article, FAQPage)
+    // =========================================================================
+    const jsonLdInfo = extractJsonLdBlocks($);
 
-    // ۲. استخراج تیتر اصلی (Title)
+    // =========================================================================
+    // ۲. استخراج متادیتاهای سئو و متاتگ‌های نهان (Yoast / OpenGraph / Twitter)
+    // =========================================================================
+    const canonicalUrl = $('link[rel="canonical"]').attr('href') || baseUrl;
+    const ogTitle = $('meta[property="og:title"]').attr('content')?.trim() || '';
+    const twitterTitle = $('meta[name="twitter:title"]').attr('content')?.trim() || '';
+    const pageTitle = $('title').text().trim() || '';
+    const ogDescription = $('meta[property="og:description"]').attr('content')?.trim() || '';
+    const twitterDescription = $('meta[name="twitter:description"]').attr('content')?.trim() || '';
+    const metaDescription = $('meta[name="description"]').attr('content')?.trim() || ogDescription || twitterDescription;
+    const ogImage = $('meta[property="og:image"]').attr('content')?.trim() || '';
+    const twitterImage = $('meta[name="twitter:image"]').attr('content')?.trim() || '';
+
+    const seoMeta: WpSeoMeta = {
+      yoast_wpseo_title: ogTitle || twitterTitle || pageTitle,
+      yoast_wpseo_metadesc: metaDescription,
+      canonical_url: canonicalUrl,
+      og_title: ogTitle,
+      og_description: ogDescription,
+      og_image: ogImage ? resolveUrl(ogImage, baseUrl) : '',
+      twitter_title: twitterTitle,
+      twitter_description: twitterDescription,
+      twitter_image: twitterImage ? resolveUrl(twitterImage, baseUrl) : ''
+    };
+
+    // =========================================================================
+    // ۳. استخراج تیتر اصلی (Title)
+    // =========================================================================
     let title = '';
     if (source.title_selector && source.title_selector.trim()) {
       try {
         title = $(source.title_selector).first().text().trim();
       } catch {}
     }
+    if (!title && jsonLdInfo.newsArticle?.headline) {
+      title = String(jsonLdInfo.newsArticle.headline).trim();
+    }
     if (!title) {
-      title =
-        $('meta[property="og:title"]').attr('content')?.trim() ||
-        $('meta[name="twitter:title"]').attr('content')?.trim() ||
-        $('h1').first().text().trim() ||
-        $('title').text().trim();
+      title = ogTitle || twitterTitle || $('h1').first().text().trim() || pageTitle;
     }
     title = cleanWhitespace(title);
 
-    // ۳. حذف عناصر زائد سراسری مخرب (اسکریپت، استایل، منوهای اصلی، فرم‌ها، نظرات، فوترها)
+    // =========================================================================
+    // ۴. استخراج نامک / اسلاگ (Slug)
+    // =========================================================================
+    let slug = generateSlug(baseUrl, title);
+
+    // =========================================================================
+    // ۵. استخراج تاریخ‌های انتشار و ویرایش (date & modified)
+    // =========================================================================
+    let datePublished =
+      jsonLdInfo.newsArticle?.datePublished ||
+      $('meta[property="article:published_time"]').attr('content') ||
+      $('meta[name="pubdate"]').attr('content') ||
+      $('meta[name="publish-date"]').attr('content') ||
+      $('meta[name="date"]').attr('content') ||
+      $('time[datetime]').first().attr('datetime') ||
+      '';
+
+    let dateModified =
+      jsonLdInfo.newsArticle?.dateModified ||
+      $('meta[property="article:modified_time"]').attr('content') ||
+      $('meta[name="last-modified"]').attr('content') ||
+      datePublished;
+
+    const validPublishedDate = normalizeIsoDate(datePublished);
+    const validModifiedDate = normalizeIsoDate(dateModified) || validPublishedDate;
+
+    // =========================================================================
+    // ۶. استخراج نویسنده / خبرنگار (Author)
+    // =========================================================================
+    const author = extractAuthor($, jsonLdInfo, baseUrl);
+
+    // =========================================================================
+    // ۷. استخراج دسته‌بندی‌ها (Categories)
+    // =========================================================================
+    const categories = extractCategories($, jsonLdInfo, source);
+
+    // =========================================================================
+    // ۸. استخراج برچسب‌ها و کلمات کلیدی (Tags)
+    // =========================================================================
+    const tags = extractTags($, jsonLdInfo);
+
+    // =========================================================================
+    // ۹. استخراج سوالات متداول (FAQ Schema & Blocks)
+    // =========================================================================
+    const faqs = extractFaqs($, jsonLdInfo);
+
+    // =========================================================================
+    // ۱۰. استخراج تصویر شاخص اولیه (Featured Image)
+    // =========================================================================
+    let featuredImage =
+      (jsonLdInfo.newsArticle?.image ? parseJsonLdImage(jsonLdInfo.newsArticle.image) : '') ||
+      ogImage ||
+      twitterImage ||
+      $('link[rel="image_src"]').attr('href') ||
+      '';
+
+    if (featuredImage && baseUrl) {
+      featuredImage = resolveUrl(featuredImage, baseUrl);
+    }
+
+    // =========================================================================
+    // ۱۱. تمیزسازی و یافتن کانتینر بدنه مقاله برای خروجی گوتنبرگ
+    // =========================================================================
+    // حذف عناصر زائد سراسری مخرب (اسکریپت‌ها، بنرهای تبلیغاتی، منوها، فرم‌ها، فوترها)
     const dangerousElements = [
       'script',
       'style',
@@ -112,12 +188,11 @@ export function cleanAndParseHtml(
       '#comments',
       '.comment-section',
       '.social-share',
-      '.share-buttons',
-      '.tags-list'
+      '.share-buttons'
     ];
     $(dangerousElements.join(', ')).remove();
 
-    // حذف سلکتورهای اختصاصی منبع (در صورتی که کاربر مشخص کرده باشد)
+    // حذف سلکتورهای اختصاصی منبع (در صورتی که در تنظیمات منبع ثبت شده باشد)
     if (source.remove_selectors && source.remove_selectors.trim()) {
       try {
         $(source.remove_selectors).remove();
@@ -126,7 +201,7 @@ export function cleanAndParseHtml(
       }
     }
 
-    // ۴. یافتن کانتینر بدنه مقاله
+    // یافتن کانتینر بدنه مقاله
     let $root: any = null;
     if (source.content_selector && source.content_selector.trim()) {
       try {
@@ -162,15 +237,16 @@ export function cleanAndParseHtml(
       $root = $('body');
     }
 
-    // ۵. استخراج و تبدیل ساختارها به فرمت تمیز و استاندارد وردپرس (Gutenberg Ready)
+    // =========================================================================
+    // ۱۲. استانداردسازی بلاک‌های گوتنبرگ وردپرس (WP Blocks Normalization)
+    // =========================================================================
     const headings: ExtractedHeading[] = [];
     const images: ExtractedImage[] = [];
     const links: ExtractedLink[] = [];
 
-    // الف) پردازش و استانداردسازی تصاویر داخل متن
+    // الف) پردازش و استانداردسازی تصاویر داخل محتوا
     $root.find('img').each((_: any, el: any) => {
       const $img = $(el);
-      // رفع مشکل Lazy-loading (بررسی data-src, data-lazy-src, data-original)
       let src =
         $img.attr('data-src') ||
         $img.attr('data-lazy-src') ||
@@ -189,7 +265,7 @@ export function cleanAndParseHtml(
 
       const alt = cleanWhitespace($img.attr('alt') || title);
 
-      // یافتن کپشن عکس (از figcaption یا کادرهای توضیحات زیر عکس)
+      // واکشی کپشن تصویر
       let caption = '';
       const $parentFigure = $img.closest('figure');
       if ($parentFigure.length > 0) {
@@ -200,10 +276,9 @@ export function cleanAndParseHtml(
         if ($next.length > 0) caption = cleanWhitespace($next.text());
       }
 
-      // اضافه به لیست تصاویر ساخت‌یافته
       images.push({ src, alt, caption });
 
-      // ساخت تگ استاندارد وردپرس
+      // تولید بلاک تصویر گوتنبرگ وردپرس
       const captionHtml = caption ? `<figcaption class="wp-element-caption">${escapeHtml(caption)}</figcaption>` : '';
       const wpFigure = $(`
         <figure class="wp-block-image size-large">
@@ -219,16 +294,16 @@ export function cleanAndParseHtml(
       }
     });
 
-    // اگر تصویر شاخص پیدا نشده بود، اولین تصویر بدنه را شاخص در نظر می‌گیریم
+    // اگر تصویر شاخص تا کنون پیدا نشده باشد، اولین تصویر محتوا را شاخص قرار می‌دهیم
     if (!featuredImage && images.length > 0) {
       featuredImage = images[0].src;
     }
 
-    // ب) پردازش تیترهای داخلی (h2, h3, h4)
+    // ب) استانداردسازی تیترهای داخلی (h1-h6)
     $root.find('h1, h2, h3, h4, h5, h6').each((_: any, el: any) => {
       const $h = $(el);
       const tag = el.tagName.toLowerCase();
-      // تبدیل h1های داخل متن به h2 (در وردپرس h1 فقط برای تیتر اصلی صفحه است)
+      // تبدیل h1 به h2 (در وردپرس h1 اختصاصی عنوان مطلب است)
       const targetTag = tag === 'h1' ? 'h2' : tag;
       const text = cleanWhitespace($h.text());
 
@@ -240,7 +315,7 @@ export function cleanAndParseHtml(
       }
     });
 
-    // ج) پردازش لینک‌ها (داخلی و خارجی + حفظ ریلیتدها)
+    // ج) استانداردسازی پیوندها (لینک‌های داخلی، خارجی و ارجاعات)
     $root.find('a').each((_: any, el: any) => {
       const $a = $(el);
       let href = $a.attr('href') || '';
@@ -258,7 +333,6 @@ export function cleanAndParseHtml(
       const isExternal = baseUrl ? !href.includes(new URL(baseUrl).hostname) : false;
       links.push({ text: linkText, url: href, is_external: isExternal });
 
-      // پاکسازی اتریبیوت‌های اضافه و اضافه کردن target برای لینک‌های خارجی
       $a.removeAttr('class')
         .removeAttr('id')
         .removeAttr('style')
@@ -270,10 +344,9 @@ export function cleanAndParseHtml(
       }
     });
 
-    // د) استانداردسازی پاراگراف‌ها، نقل قول‌ها و لیست‌ها
+    // د) استانداردسازی پاراگراف‌ها، لیست‌ها و نقل قول‌ها
     $root.find('p').each((_: any, el: any) => {
       const $p = $(el);
-      // حذف اتریبیوت‌های مزاحم
       $p.removeAttr('style').removeAttr('class').removeAttr('id');
       const text = cleanWhitespace($p.text());
       if (!text && $p.find('img, figure').length === 0) {
@@ -283,8 +356,7 @@ export function cleanAndParseHtml(
 
     $root.find('blockquote').each((_: any, el: any) => {
       const $b = $(el);
-      $b.removeAttr('style').removeAttr('id');
-      $b.addClass('wp-block-quote');
+      $b.removeAttr('style').removeAttr('id').addClass('wp-block-quote');
     });
 
     $root.find('ul, ol').each((_: any, el: any) => {
@@ -292,10 +364,14 @@ export function cleanAndParseHtml(
       $list.removeAttr('style').removeAttr('id').removeAttr('class');
     });
 
-    // هـ) پاکسازی اتریبیوت‌های style و class از کلیه تگ‌های باقی‌مانده داخل بدنه
+    $root.find('table').each((_: any, el: any) => {
+      const $tbl = $(el);
+      $tbl.removeAttr('style').removeAttr('id').addClass('wp-block-table');
+    });
+
+    // هـ) پاکسازی اتریبیوت‌های نامناسب باقی‌مانده از تگ‌های فرعی
     $root.find('*').each((_: any, el: any) => {
       const $el = $(el);
-      // از کلاس‌های استاندارد wp-block که خودمان اضافه کردیم محافظت می‌کنیم
       const cls = $el.attr('class') || '';
       if (!cls.includes('wp-block-') && !cls.includes('wp-element-')) {
         $el.removeAttr('class');
@@ -303,7 +379,7 @@ export function cleanAndParseHtml(
       $el.removeAttr('style').removeAttr('id').removeAttr('onclick');
     });
 
-    // حذف تگ‌های خالی و باز کردن (unwrap) دیوهای زائد برای تولید کد بسیار تمیز و خالص وردپرس
+    // باز کردن (unwrap) دیوهای زائد برای تولید خروجی خالص گوتنبرگ
     for (let i = 0; i < 3; i++) {
       $root.find('div:empty, span:empty, p:empty').remove();
       $root.find('div, section, article').each((_: any, el: any) => {
@@ -318,38 +394,114 @@ export function cleanAndParseHtml(
       });
     }
 
-    // ۶. تولید خروجی HTML تمیز وردپرس
+    // =========================================================================
+    // ۱۳. اضافه کردن بلاک پرسش‌های متداول (FAQ) به محتوای گوتنبرگ (در صورت وجود)
+    // =========================================================================
+    if (faqs.length > 0) {
+      const faqBlockHtml = `
+        <div class="wp-block-group wp-block-faq-section" style="margin-top:2.5rem; padding:1.25rem; border:1px solid #334155; border-radius:0.75rem; background:rgba(30,41,59,0.3);">
+          <h2 class="wp-block-heading" style="color:#38bdf8; margin-bottom:1rem;">پرسش‌های متداول (FAQ)</h2>
+          ${faqs
+            .map(
+              (f) => `
+            <details class="wp-block-details" style="margin-bottom:0.75rem; padding:0.75rem; background:rgba(15,23,42,0.6); border-radius:0.5rem; border:1px solid #1e293b;">
+              <summary style="font-weight:700; cursor:pointer; color:#f1f5f9;">${escapeHtml(f.question)}</summary>
+              <p style="margin-top:0.5rem; color:#cbd5e1; font-size:0.95rem;">${escapeHtml(f.answer)}</p>
+            </details>
+          `
+            )
+            .join('')}
+        </div>
+      `;
+      $root.append(faqBlockHtml);
+    }
+
+    // ۱۴. خروجی نهایی کد تمیز HTML وردپرس
     let cleanWpHtml = $root.html() || '';
-    // پاکسازی خطوط و فاصله‌های اضافه بین تگ‌ها
     cleanWpHtml = cleanWpHtml
       .replace(/\n\s*\n/g, '\n')
       .replace(/<p>\s*<\/p>/g, '')
       .replace(/<div>\s*<\/div>/g, '')
       .trim();
 
-    // ۷. تولید خروجی متن خالص بدون تگ (Clean Plain Text)
+    // ۱۵. متن کاملاً تمیز بدون تگ (Clean Plain Text)
     const plainText = extractCleanText(cleanWpHtml);
 
-    // ۸. تولید چکیده (Excerpt) از پاراگراف اول یا دوم
-    const paragraphs = plainText.split('\n\n').filter((p) => p.length > 30);
-    const excerpt = paragraphs.length > 0 ? paragraphs[0].slice(0, 280) + '...' : '';
+    // ۱۶. چکیده (Excerpt)
+    let excerpt = metaDescription;
+    if (!excerpt || excerpt.length < 20) {
+      const paragraphs = plainText.split('\n\n').filter((p) => p.length > 30);
+      excerpt = paragraphs.length > 0 ? paragraphs[0].slice(0, 260) + '...' : '';
+    }
 
-    // ۹. محاسبه زمان مطالعه و تعداد کلمات
+    // ۱۷. آمار تعداد کلمات و زمان مطالعه
     const wordCount = plainText.split(/\s+/).filter(Boolean).length;
     const readingTime = Math.max(1, Math.ceil(wordCount / 200));
 
-    // ۱۰. ساختار نهایی JSON
-    const structuredJson: StructuredArticleJson = {
-      title,
-      featured_image: featuredImage,
-      excerpt,
-      headings,
-      images,
-      links,
-      reading_time_minutes: readingTime,
-      word_count: wordCount,
-      cleaned_text: plainText,
-      html_content: cleanWpHtml
+    // ۱۸. ساخت شیء رسانه شاخص (Featured Media)
+    const featuredMedia: WpFeaturedMedia = {
+      source_url: featuredImage,
+      alt_text: cleanWhitespace(images[0]?.alt || title),
+      title: title,
+      caption: images[0]?.caption || '',
+      description: excerpt
+    };
+
+    // ۱۹. ساخت شیء اسکیما (Schema Data)
+    const schemaData: WpSchemaData = {
+      news_article: {
+        headline: title,
+        datePublished: validPublishedDate,
+        dateModified: validModifiedDate,
+        author: author.name,
+        publisher: jsonLdInfo.newsArticle?.publisher?.name || source.name || '',
+        description: excerpt,
+        image: featuredImage
+      },
+      faq: faqs,
+      raw_json_ld: jsonLdInfo.rawJsonLd
+    };
+
+    // ۲۰. تولید خروجی رسمی و کامل مطابق با WP REST API (/wp/v2/posts)
+    const wpRestPost: WpRestPost = {
+      date: validPublishedDate,
+      date_gmt: toUtcIso(validPublishedDate),
+      modified: validModifiedDate,
+      modified_gmt: toUtcIso(validModifiedDate),
+      slug: slug,
+      status: 'publish',
+      type: 'post',
+      link: canonicalUrl,
+      title: {
+        rendered: title,
+        raw: title
+      },
+      content: {
+        rendered: cleanWpHtml,
+        protected: false
+      },
+      excerpt: {
+        rendered: `<p>${escapeHtml(excerpt)}</p>`,
+        protected: false
+      },
+      author: author,
+      featured_media: featuredMedia,
+      comment_status: 'open',
+      ping_status: 'open',
+      categories: categories,
+      tags: tags,
+      meta: seoMeta,
+      schema: schemaData,
+      stats: {
+        reading_time_minutes: readingTime,
+        word_count: wordCount,
+        headings_count: headings.length,
+        images_count: images.length
+      },
+      headings: headings,
+      images: images,
+      links: links,
+      cleaned_text: plainText
     };
 
     if (plainText.length < 20 && cleanWpHtml.length < 50) {
@@ -360,8 +512,16 @@ export function cleanAndParseHtml(
         html_content: cleanWpHtml,
         featured_image: featuredImage,
         excerpt,
-        json_data: structuredJson,
-        error: 'محتوای صفحه استخراج نشد یا ساختار آن تغییر کرده است.'
+        author,
+        categories,
+        tags,
+        date: validPublishedDate,
+        modified: validModifiedDate,
+        slug,
+        faq: faqs,
+        seo_meta: seoMeta,
+        wp_post: wpRestPost,
+        error: 'محتوای متنی صفحه استخراج نشد یا ساختار آن محافظت شده است.'
       };
     }
 
@@ -372,24 +532,329 @@ export function cleanAndParseHtml(
       html_content: cleanWpHtml,
       featured_image: featuredImage,
       excerpt,
-      json_data: structuredJson
+      author,
+      categories,
+      tags,
+      date: validPublishedDate,
+      modified: validModifiedDate,
+      slug,
+      faq: faqs,
+      seo_meta: seoMeta,
+      wp_post: wpRestPost
     };
   } catch (err: any) {
-    return {
-      success: false,
-      title: '',
-      cleaned_content: '',
-      html_content: '',
-      featured_image: '',
-      excerpt: '',
-      error: `خطا در تجزیه ساختار مقاله: ${err.message || String(err)}`
-    };
+    return createEmptyResult(`خطا در تجزیه ساختار مقاله: ${err.message || String(err)}`, baseUrl);
   }
 }
 
+// =========================================================================
+// توابع کمکی واکشی و استخراج متادیتاها
+// =========================================================================
+
 /**
- * تبدیل HTML به متن کاملاً تمیز و خالص بدون هیچ تگی
+ * استخراج و پارس بلوک‌های JSON-LD
  */
+function extractJsonLdBlocks($: cheerio.CheerioAPI): {
+  newsArticle?: any;
+  faqList: WpFaqItem[];
+  rawJsonLd: any[];
+} {
+  const rawJsonLd: any[] = [];
+  let newsArticle: any = null;
+  const faqList: WpFaqItem[] = [];
+
+  $('script[type="application/ld+json"]').each((_: any, el: any) => {
+    try {
+      const raw = $(el).html();
+      if (!raw) return;
+      const data = JSON.parse(raw);
+      rawJsonLd.push(data);
+
+      const items = Array.isArray(data) ? data : data['@graph'] ? data['@graph'] : [data];
+
+      for (const item of items) {
+        if (!item || typeof item !== 'object') continue;
+        const type = item['@type'];
+
+        // تشخیص NewsArticle یا Article
+        if (
+          !newsArticle &&
+          (type === 'NewsArticle' ||
+            type === 'Article' ||
+            type === 'BlogPosting' ||
+            type === 'TechArticle' ||
+            (Array.isArray(type) && (type.includes('NewsArticle') || type.includes('Article'))))
+        ) {
+          newsArticle = item;
+        }
+
+        // تشخیص FAQPage
+        if (type === 'FAQPage' || (Array.isArray(type) && type.includes('FAQPage'))) {
+          const entities = item.mainEntity || item.questions || [];
+          if (Array.isArray(entities)) {
+            for (const q of entities) {
+              const question = q.name || q.question || '';
+              const answer = q.acceptedAnswer?.text || q.text || '';
+              if (question && answer) {
+                faqList.push({
+                  question: cleanWhitespace(stripTags(question)),
+                  answer: cleanWhitespace(stripTags(answer))
+                });
+              }
+            }
+          }
+        }
+      }
+    } catch {}
+  });
+
+  return { newsArticle, faqList, rawJsonLd };
+}
+
+/**
+ * استخراج نویسنده / خبرنگار
+ */
+function extractAuthor(
+  $: cheerio.CheerioAPI,
+  jsonLdInfo: { newsArticle?: any },
+  baseUrl: string
+): WpAuthor {
+  let name = '';
+  let url = '';
+  let avatar = '';
+
+  // ۱. از JSON-LD
+  if (jsonLdInfo.newsArticle?.author) {
+    const a = jsonLdInfo.newsArticle.author;
+    if (typeof a === 'string') {
+      name = a;
+    } else if (Array.isArray(a) && a.length > 0) {
+      name = a[0].name || '';
+      url = a[0].url || '';
+    } else if (typeof a === 'object') {
+      name = a.name || '';
+      url = a.url || '';
+    }
+  }
+
+  // ۲. از متاتگ‌ها
+  if (!name) {
+    name =
+      $('meta[name="author"]').attr('content') ||
+      $('meta[property="article:author"]').attr('content') ||
+      $('meta[name="twitter:creator"]').attr('content') ||
+      '';
+  }
+
+  // ۳. از سلکتورهای صفحه
+  if (!name) {
+    const authorSelectors = [
+      '[rel="author"]',
+      '.author-name',
+      '.author',
+      '.byline',
+      '.post-author',
+      '.entry-author',
+      '.article-author',
+      '.author__name',
+      '.c-author',
+      '[itemprop="author"]'
+    ];
+    for (const sel of authorSelectors) {
+      const found = $(sel).first();
+      if (found.length > 0) {
+        name = cleanWhitespace(found.text());
+        const href = found.attr('href') || found.find('a').attr('href');
+        if (href) url = resolveUrl(href, baseUrl);
+        break;
+      }
+    }
+  }
+
+  // استخراج تصویر آواتار نویسنده در صورت وجود
+  const avatarSelectors = ['.author-avatar img', '.author img', '.avatar img', 'img[alt*="avatar"]'];
+  for (const sel of avatarSelectors) {
+    const img = $(sel).first();
+    const src = img.attr('src') || img.attr('data-src');
+    if (src) {
+      avatar = resolveUrl(src, baseUrl);
+      break;
+    }
+  }
+
+  name = cleanWhitespace(name.replace(/^(نویسنده|خبرنگار|نوشته شده توسط|گزارش از|by|author)\s*[:：]/i, ''));
+  if (!name) name = 'هیئت تحریریه';
+
+  return {
+    name,
+    url: url ? resolveUrl(url, baseUrl) : undefined,
+    avatar: avatar || undefined
+  };
+}
+
+/**
+ * استخراج دسته‌بندی‌ها
+ */
+function extractCategories(
+  $: cheerio.CheerioAPI,
+  jsonLdInfo: { newsArticle?: any },
+  source: Partial<Source>
+): string[] {
+  const catSet = new Set<string>();
+
+  // ۱. دسته‌بندی پیش‌فرض منبع
+  if (source.category && source.category.trim()) {
+    catSet.add(source.category.trim());
+  }
+
+  // ۲. از JSON-LD
+  if (jsonLdInfo.newsArticle?.articleSection) {
+    const section = jsonLdInfo.newsArticle.articleSection;
+    if (Array.isArray(section)) {
+      section.forEach((s: any) => catSet.add(cleanWhitespace(String(s))));
+    } else if (typeof section === 'string') {
+      section.split(',').forEach((s: string) => catSet.add(cleanWhitespace(s)));
+    }
+  }
+
+  // ۳. از متاتگ‌ها
+  const metaCat =
+    $('meta[property="article:section"]').attr('content') ||
+    $('meta[name="category"]').attr('content') ||
+    '';
+  if (metaCat) {
+    metaCat.split(',').forEach((s: string) => catSet.add(cleanWhitespace(s)));
+  }
+
+  // ۴. از ساختار خرده‌نان (Breadcrumbs) و لینک‌های دسته
+  const categorySelectors = [
+    '.breadcrumb a, .breadcrumbs a, .c-breadcrumb a',
+    '.post-category a, .entry-category a, .article-category a, .category a'
+  ];
+  $(categorySelectors.join(', ')).each((_: any, el: any) => {
+    const text = cleanWhitespace($(el).text());
+    if (text && !['خانه', 'صفحه اصلی', 'home', 'main', 'اخبار', 'news'].includes(text.toLowerCase())) {
+      catSet.add(text);
+    }
+  });
+
+  const res = Array.from(catSet).filter((c) => c.length > 1 && c.length < 40);
+  return res.length > 0 ? res : ['عمومی'];
+}
+
+/**
+ * استخراج برچسب‌ها و کلمات کلیدی (Tags)
+ */
+function extractTags($: cheerio.CheerioAPI, jsonLdInfo: { newsArticle?: any }): string[] {
+  const tagSet = new Set<string>();
+
+  // ۱. از JSON-LD
+  if (jsonLdInfo.newsArticle?.keywords) {
+    const kw = jsonLdInfo.newsArticle.keywords;
+    if (Array.isArray(kw)) {
+      kw.forEach((k: any) => tagSet.add(cleanWhitespace(String(k))));
+    } else if (typeof kw === 'string') {
+      kw.split(/[,،]/).forEach((k: string) => tagSet.add(cleanWhitespace(k)));
+    }
+  }
+
+  // ۲. از متاتگ‌های article:tag و keywords
+  $('meta[property="article:tag"]').each((_: any, el: any) => {
+    const val = $(el).attr('content');
+    if (val) tagSet.add(cleanWhitespace(val));
+  });
+
+  const metaKw =
+    $('meta[name="keywords"]').attr('content') || $('meta[name="news_keywords"]').attr('content') || '';
+  if (metaKw) {
+    metaKw.split(/[,،]/).forEach((k: string) => tagSet.add(cleanWhitespace(k)));
+  }
+
+  // ۳. از تگ‌ها و هشتگ‌های موجود در انتهای متن
+  const tagSelectors = [
+    '.tags a, .tag a, .post-tags a, .entry-tags a, .article-tags a, [rel="tag"], .tags-list a, .post__tags a, .c-tags a'
+  ];
+  $(tagSelectors.join(', ')).each((_: any, el: any) => {
+    let t = cleanWhitespace($(el).text());
+    t = t.replace(/^#/, '').trim();
+    if (t.length > 1 && t.length < 50) {
+      tagSet.add(t);
+    }
+  });
+
+  return Array.from(tagSet).filter((t) => t.length > 1 && t.length < 45);
+}
+
+/**
+ * استخراج سوالات متداول (FAQ) از اسکیما یا بدنه صفحه
+ */
+function extractFaqs($: cheerio.CheerioAPI, jsonLdInfo: { faqList: WpFaqItem[] }): WpFaqItem[] {
+  const faqs = [...jsonLdInfo.faqList];
+
+  // اسکن ساختارهای آکاردئونی و FAQ در بدنه HTML
+  $('.faq-item, .faq, .faqs, [class*="faq"]').each((_: any, el: any) => {
+    const $el = $(el);
+    const q = $el.find('.question, .faq-question, h3, h4, summary').first().text();
+    const a = $el.find('.answer, .faq-answer, p').first().text();
+    const question = cleanWhitespace(q);
+    const answer = cleanWhitespace(a);
+    if (question.length > 5 && answer.length > 10) {
+      if (!faqs.some((f) => f.question === question)) {
+        faqs.push({ question, answer });
+      }
+    }
+  });
+
+  return faqs;
+}
+
+function parseJsonLdImage(img: any): string {
+  if (typeof img === 'string') return img;
+  if (Array.isArray(img) && img.length > 0) return parseJsonLdImage(img[0]);
+  if (typeof img === 'object' && img !== null) return img.url || img.contentUrl || '';
+  return '';
+}
+
+function normalizeIsoDate(dateStr?: string): string {
+  if (!dateStr) return new Date().toISOString();
+  try {
+    const d = new Date(dateStr);
+    return isNaN(d.getTime()) ? new Date().toISOString() : d.toISOString();
+  } catch {
+    return new Date().toISOString();
+  }
+}
+
+function toUtcIso(dateStr: string): string {
+  try {
+    return new Date(dateStr).toISOString();
+  } catch {
+    return new Date().toISOString();
+  }
+}
+
+function generateSlug(url: string, title: string): string {
+  if (url) {
+    try {
+      const u = new URL(url);
+      const parts = u.pathname.split('/').filter(Boolean);
+      if (parts.length > 0) {
+        const last = parts[parts.length - 1].replace(/\.(html|php|asp|htm)$/i, '');
+        if (last && last.length > 2) {
+          return decodeURIComponent(last);
+        }
+      }
+    } catch {}
+  }
+
+  // در صورت عدم وجود اسلاگ معتبر در آدرس، از روی تیتر اسلاگ می‌سازیم
+  return title
+    .toLowerCase()
+    .replace(/[^\w\u0600-\u06FF\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-');
+}
+
 function extractCleanText(htmlContent: string): string {
   const $ = cheerio.load(htmlContent);
   $('h1, h2, h3, h4, h5, h6, p, li, blockquote, tr, figure').each((_: any, el: any) => {
@@ -407,6 +872,10 @@ function extractCleanText(htmlContent: string): string {
   }
 
   return cleaned.join('\n\n');
+}
+
+function stripTags(html: string): string {
+  return html.replace(/<[^>]*>?/gm, '');
 }
 
 function resolveUrl(relativeOrAbsolute: string, base: string): string {
@@ -436,4 +905,52 @@ function escapeHtml(str: string): string {
       "'": '&#39;'
     }[m] || m)
   );
+}
+
+function createEmptyResult(errorMsg: string, url: string): ExtractedResult {
+  const emptyWpPost: WpRestPost = {
+    date: new Date().toISOString(),
+    date_gmt: new Date().toISOString(),
+    modified: new Date().toISOString(),
+    modified_gmt: new Date().toISOString(),
+    slug: '',
+    status: 'draft',
+    type: 'post',
+    link: url,
+    title: { rendered: '', raw: '' },
+    content: { rendered: '', protected: false },
+    excerpt: { rendered: '', protected: false },
+    author: { name: 'نامشخص' },
+    featured_media: { source_url: '', alt_text: '' },
+    comment_status: 'open',
+    ping_status: 'open',
+    categories: [],
+    tags: [],
+    meta: {},
+    schema: {},
+    stats: { reading_time_minutes: 0, word_count: 0, headings_count: 0, images_count: 0 },
+    headings: [],
+    images: [],
+    links: [],
+    cleaned_text: ''
+  };
+
+  return {
+    success: false,
+    title: '',
+    cleaned_content: '',
+    html_content: '',
+    featured_image: '',
+    excerpt: '',
+    author: { name: 'نامشخص' },
+    categories: [],
+    tags: [],
+    date: new Date().toISOString(),
+    modified: new Date().toISOString(),
+    slug: '',
+    faq: [],
+    seo_meta: {},
+    wp_post: emptyWpPost,
+    error: errorMsg
+  };
 }

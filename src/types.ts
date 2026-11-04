@@ -30,17 +30,96 @@ export interface ExtractedLink {
   is_external: boolean;
 }
 
-export interface StructuredArticleJson {
-  title: string;
-  featured_image: string;
-  excerpt: string;
+export interface WpAuthor {
+  id?: number;
+  name: string;
+  url?: string;
+  avatar?: string;
+}
+
+export interface WpFaqItem {
+  question: string;
+  answer: string;
+}
+
+export interface WpFeaturedMedia {
+  id?: number;
+  source_url: string;
+  alt_text: string;
+  title?: string;
+  caption?: string;
+  description?: string;
+}
+
+export interface WpSeoMeta {
+  yoast_wpseo_title?: string;
+  yoast_wpseo_metadesc?: string;
+  canonical_url?: string;
+  og_title?: string;
+  og_description?: string;
+  og_image?: string;
+  twitter_title?: string;
+  twitter_description?: string;
+  twitter_image?: string;
+}
+
+export interface WpSchemaData {
+  news_article?: {
+    headline?: string;
+    datePublished?: string;
+    dateModified?: string;
+    author?: string;
+    publisher?: string;
+    description?: string;
+    image?: string;
+  };
+  faq?: WpFaqItem[];
+  raw_json_ld?: any[];
+}
+
+/**
+ * ساختار رسمی پست خبری در WP REST API (سازگار کامل با /wp-json/wp/v2/posts)
+ */
+export interface WpRestPost {
+  id?: number;
+  date: string;
+  date_gmt: string;
+  modified: string;
+  modified_gmt: string;
+  slug: string;
+  status: 'publish' | 'draft';
+  type: 'post';
+  link: string;
+  title: {
+    rendered: string;
+    raw?: string;
+  };
+  content: {
+    rendered: string;
+    protected: boolean;
+  };
+  excerpt: {
+    rendered: string;
+    protected: boolean;
+  };
+  author: WpAuthor;
+  featured_media: WpFeaturedMedia;
+  comment_status: 'open' | 'closed';
+  ping_status: 'open' | 'closed';
+  categories: string[];
+  tags: string[];
+  meta: WpSeoMeta;
+  schema: WpSchemaData;
+  stats: {
+    reading_time_minutes: number;
+    word_count: number;
+    headings_count: number;
+    images_count: number;
+  };
   headings: ExtractedHeading[];
   images: ExtractedImage[];
   links: ExtractedLink[];
-  reading_time_minutes: number;
-  word_count: number;
   cleaned_text: string;
-  html_content: string;
 }
 
 export interface Article {
@@ -50,9 +129,11 @@ export interface Article {
   category?: string;
   url: string;
   title?: string;
+  author_name?: string;
+  tags?: string; // JSON array string or comma separated
   cleaned_content?: string; // متن کاملاً تمیز بدون تگ
-  html_content?: string;    // کد استاندارد و تمیز وردپرس
-  json_content?: string;    // ساختار کامل جیسون
+  html_content?: string;    // کد استاندارد و تمیز وردپرس (Gutenberg)
+  json_content?: string;    // خروجی استاندارد WP REST API
   featured_image?: string;  // تصویر شاخص
   excerpt?: string;         // چکیده مطلب
   published_at?: string;
@@ -68,7 +149,15 @@ export interface ExtractedResult {
   html_content: string;
   featured_image: string;
   excerpt: string;
-  json_data?: StructuredArticleJson;
+  author: WpAuthor;
+  categories: string[];
+  tags: string[];
+  date: string;
+  modified: string;
+  slug: string;
+  faq: WpFaqItem[];
+  seo_meta: WpSeoMeta;
+  wp_post: WpRestPost;
   error?: string;
 }
 

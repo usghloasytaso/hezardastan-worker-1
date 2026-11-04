@@ -63,19 +63,21 @@ export async function runCollectionPipeline(
           await saveArticle(env.DB, {
             source_id: source.id!,
             source_name: source.name,
-            category: source.category,
+            category: extractResult.categories && extractResult.categories.length > 0 ? extractResult.categories.join(', ') : (source.category || 'عمومی'),
             url: item.link,
             title: extractResult.title || item.title,
             cleaned_content: extractResult.cleaned_content,
             html_content: extractResult.html_content,
-            json_content: JSON.stringify(extractResult.json_data || {}),
+            json_content: JSON.stringify(extractResult.wp_post || {}),
             featured_image: extractResult.featured_image,
             excerpt: extractResult.excerpt,
-            published_at: item.pubDate || new Date().toISOString(),
+            author_name: extractResult.author?.name || 'هیئت تحریریه',
+            tags: JSON.stringify(extractResult.tags || []),
+            published_at: extractResult.date || item.pubDate || new Date().toISOString(),
             status: 'آماده پردازش'
           });
           report.newArticlesScraped++;
-          report.details.push(`✓ استخراج موفق: ${extractResult.title || item.title}`);
+          report.details.push(`✓ استخراج موفق: ${extractResult.title || item.title} (نویسنده: ${extractResult.author?.name || 'نامشخص'} | تگ‌ها: ${extractResult.tags?.length || 0})`);
         } else {
           // ۳. ثبت خطا بدون متوقف شدن ورکر
           await saveArticle(env.DB, {
