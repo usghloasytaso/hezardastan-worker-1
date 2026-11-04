@@ -1,0 +1,14 @@
+name = "hezardastan-worker-1"
+main = "src/index.ts"
+compatibility_date = "2024-10-01"
+compatibility_flags = ["nodejs_compat"]
+
+# ترایگر پایش زمان‌بندی‌شده (هر ۱۵ دقیقه)
+[triggers]
+crons = ["*/15 * * * *"]
+
+# اتصال دیتابیس دیوان اول (Cloudflare D1)
+[[d1_databases]]
+binding = "DB"
+database_name = "hezardastan-d1"
+database_id = "4d4e50b9-7dbc-432f-ab54-a0f91e81741c"
