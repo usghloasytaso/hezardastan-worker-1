@@ -770,14 +770,22 @@ function extractTags($: cheerio.CheerioAPI, jsonLdInfo: { newsArticle?: any }): 
     metaKw.split(/[,،]/).forEach((k: string) => tagSet.add(cleanWhitespace(k)));
   }
 
-  // ۳. از تگ‌ها و هشتگ‌های موجود در انتهای متن
+  // ۳. از تگ‌ها، لینک‌های برچسب و هشتگ‌های موجود در صفحه
   const tagSelectors = [
-    '.tags a, .tag a, .post-tags a, .entry-tags a, .article-tags a, [rel="tag"], .tags-list a, .post__tags a, .c-tags a'
+    'a[href*="/tags/"], a[href*="/tag/"]',
+    '.tags a, .tag a, .post-tags a, .entry-tags a, .article-tags a, [rel="tag"], .tags-list a, .post__tags a, .c-tags a',
+    '[class*="tags"] a, [class*="tag-item"] a, .tag-cloud a'
   ];
   $(tagSelectors.join(', ')).each((_: any, el: any) => {
     let t = cleanWhitespace($(el).text());
     t = t.replace(/^#/, '').trim();
-    if (t.length > 1 && t.length < 50) {
+    // فیلتر کردن لینک‌های عمومی ناوبری
+    const lower = t.toLowerCase();
+    if (
+      t.length > 1 &&
+      t.length < 45 &&
+      !['all tags', 'tags', 'برچسب‌ها', 'تگ‌ها', 'view all', 'more'].includes(lower)
+    ) {
       tagSet.add(t);
     }
   });
