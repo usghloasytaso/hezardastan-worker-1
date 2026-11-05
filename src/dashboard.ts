@@ -848,11 +848,17 @@ export function renderDashboardHtml(): string {
 
           const wp = data.wp_post || {};
           const wordCount = wp.stats?.word_count || 0;
-          const authorName = wp.author?.name ? wp.author.name : '(بدون نویسنده)';
           const tagCount = wp.tags?.length || 0;
           const faqCount = wp.schema?.faq?.length || 0;
           const customCount = Object.keys(wp.custom_fields || {}).length;
-          metaStats.innerText = \`نویسنده: \${authorName} | کلمات: \${wordCount} | برچسب‌ها: \${tagCount}\${customCount ? \` | فیلدهای اختصاصی: \${customCount}\` : ''} | سوالات متداول: \${faqCount}\`;
+
+          const statsItems = [];
+          if (wp.author?.name && wp.author.name.trim()) statsItems.push(\`نویسنده: \${wp.author.name.trim()}\`);
+          if (wordCount > 0) statsItems.push(\`کلمات: \${wordCount}\`);
+          if (tagCount > 0) statsItems.push(\`برچسب‌ها: \${tagCount}\`);
+          if (customCount > 0) statsItems.push(\`فیلدهای اختصاصی: \${customCount}\`);
+          if (faqCount > 0) statsItems.push(\`سوالات متداول: \${faqCount}\`);
+          metaStats.innerText = statsItems.join(' | ') || 'فیلدهای استخراج خالی';
 
           // ۱. تب پیش‌نمایش بصری رسمی وردپرس
           visualBox.innerHTML = buildWordPressVisualHtml(wp, 'تست زنده', url);
@@ -987,7 +993,10 @@ export function renderDashboardHtml(): string {
       currentModalArticle = a;
 
       document.getElementById('modalArticleTitle').innerText = a.title || 'بدون تیتر';
-      document.getElementById('modalArticleMeta').innerText = \`منبع: \${a.source_name} | نویسنده: \${a.author_name || 'هیئت تحریریه'} | وضعیت: \${a.status}\`;
+      const metaParts = [\`منبع: \${a.source_name}\`];
+      if (a.author_name && a.author_name.trim()) metaParts.push(\`نویسنده: \${a.author_name.trim()}\`);
+      metaParts.push(\`وضعیت: \${a.status}\`);
+      document.getElementById('modalArticleMeta').innerText = metaParts.join(' | ');
       document.getElementById('modalArticleLink').href = a.url;
 
       let wp = null;
@@ -1000,7 +1009,7 @@ export function renderDashboardHtml(): string {
       // ۱. رندر تب بصری جامع وردپرس
       document.getElementById('modalContentVisual').innerHTML = buildWordPressVisualHtml(wp.title ? wp : {
         title: { rendered: a.title },
-        author: { name: a.author_name || 'هیئت تحریریه' },
+        author: { name: a.author_name || '' },
         category: a.category,
         date: a.published_at,
         featured_media: { source_url: a.featured_image, alt_text: a.title },
@@ -1072,30 +1081,42 @@ export function renderDashboardHtml(): string {
       if (!wpPost) return '<div class="text-slate-500 p-8 text-center">محتوایی یافت نشد.</div>';
 
       const title = (wpPost.title && wpPost.title.rendered) || wpPost.title || '';
-      const authorName = (wpPost.author && wpPost.author.name) || wpPost.author_name || '';
-      const authorUrl = (wpPost.author && wpPost.author.url) || '#';
+      const authorName = (wpPost.author && wpPost.author.name && wpPost.author.name.trim()) || (wpPost.author_name && wpPost.author_name.trim()) || '';
+      const authorUrl = (wpPost.author && wpPost.author.url) || '';
       const authorAvatar = (wpPost.author && wpPost.author.avatar) || '';
-      const datePublished = wpPost.date || wpPost.published_at ? formatDate(wpPost.date || wpPost.published_at) : '';
-      const dateModified = wpPost.modified && wpPost.modified !== wpPost.date ? formatDate(wpPost.modified) : '';
-      const categories = Array.isArray(wpPost.categories) ? wpPost.categories : (wpPost.category ? [wpPost.category] : []);
+      const rawDate = wpPost.date || wpPost.published_at || '';
+      const datePublished = rawDate ? formatDate(rawDate) : '';
+      const rawModified = wpPost.modified && wpPost.modified !== wpPost.date ? wpPost.modified : '';
+      const dateModified = rawModified ? formatDate(rawModified) : '';
+      const categories = (Array.isArray(wpPost.categories) ? wpPost.categories : (wpPost.category ? [wpPost.category] : [])).filter(Boolean);
       let tags = wpPost.tags || [];
       if (typeof tags === 'string') {
         try { tags = JSON.parse(tags); } catch { tags = tags.split(','); }
       }
+      tags = (Array.isArray(tags) ? tags : []).map(t => String(t).trim()).filter(Boolean);
       const featuredMedia = wpPost.featured_media || { source_url: wpPost.featured_image || '' };
       const contentHtml = (wpPost.content && wpPost.content.rendered) || wpPost.html_content || wpPost.cleaned_content || '';
       const readingTime = (wpPost.stats && wpPost.stats.reading_time_minutes) || Math.max(1, Math.ceil((wpPost.stats?.word_count || 120) / 200));
-      const wordCount = (wpPost.stats && wpPost.stats.word_count) || (contentHtml.split(/\s+/).length);
+      const wordCount = (wpPost.stats && wpPost.stats.word_count) || (contentHtml ? contentHtml.split(/\s+/).filter(Boolean).length : 0);
       const faqs = (wpPost.schema && wpPost.schema.faq) || wpPost.faq || [];
       const seoMeta = wpPost.meta || wpPost.seo_meta || {};
       const customFields = wpPost.custom_fields || (wpPost.wp_post && wpPost.wp_post.custom_fields) || {};
       const slug = wpPost.slug || '';
       const canonical = (seoMeta && seoMeta.canonical_url) || wpPost.link || fallbackUrl || '#';
 
+      const hasAuthor = Boolean(authorName);
+      const hasDate = Boolean(datePublished);
+      const hasCustomFields = Boolean(customFields && Object.keys(customFields).length > 0);
+      const hasCategories = Boolean(categories && categories.length > 0);
+      const hasTags = Boolean(tags && tags.length > 0);
+      const hasFeaturedImage = Boolean(featuredMedia && featuredMedia.source_url && featuredMedia.source_url.trim());
+      const hasFaqs = Boolean(faqs && faqs.length > 0);
+      const hasContent = Boolean(contentHtml && contentHtml.trim());
+
       return \`
         <div class="space-y-5 max-w-4xl mx-auto pb-6 text-start" dir="auto">
 
-          \${categories && categories.length > 0 ? \`
+          \${hasCategories ? \`
           <!-- نوار دسته‌بندی‌ها -->
           <div class="flex flex-wrap items-center gap-1.5" dir="auto">
             <span class="text-[11px] font-bold text-slate-400 ml-1">دسته‌بندی‌ها:</span>
@@ -1103,37 +1124,41 @@ export function renderDashboardHtml(): string {
           </div>
           \` : ''}
 
+          \${title ? \`
           <!-- تیتر اصلی خبر -->
           <h1 class="text-xl sm:text-2xl lg:text-3xl font-extrabold text-white leading-snug tracking-tight text-start" dir="auto">
-            \${escapeHtml(title || '(بدون تیتر)')}
+            \${escapeHtml(title)}
           </h1>
+          \` : ''}
 
           <!-- نوار مشخصات نویسنده، تاریخ و زمان مطالعه -->
           <div class="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 text-xs text-slate-300">
-            <div class="flex items-center gap-2.5">
-              \${authorName ? (authorAvatar ? \`<img src="\${escapeHtml(authorAvatar)}" class="w-8 h-8 rounded-full border border-slate-700 object-cover" alt="Author" />\` : \`
-              <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-cyan-600 to-blue-600 flex items-center justify-center text-white font-bold text-xs shrink-0 shadow">
-                \${escapeHtml(authorName.charAt(0) || 'ن')}
-              </div>\`) : \`
-              <div class="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-500 text-xs shrink-0">
-                —
-              </div>
-              \`}
-              <div>
-                <div class="font-bold text-slate-100 flex items-center gap-1">
-                  <span>\${authorName ? \`نویسنده: \${escapeHtml(authorName)}\` : '<span class="text-slate-500 font-normal">بدون نویسنده</span>'}</span>
-                  \${authorUrl && authorUrl !== '#' ? \`<a href="\${escapeHtml(authorUrl)}" target="_blank" class="text-cyan-400 hover:underline text-[10px]">(پروفایل ↗)</a>\` : ''}
+            \${(hasAuthor || hasDate) ? \`
+              <div class="flex items-center gap-2.5">
+                \${hasAuthor ? (authorAvatar ? \`<img src="\${escapeHtml(authorAvatar)}" class="w-8 h-8 rounded-full border border-slate-700 object-cover" alt="Author" />\` : \`
+                <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-cyan-600 to-blue-600 flex items-center justify-center text-white font-bold text-xs shrink-0 shadow">
+                  \${escapeHtml(authorName.charAt(0) || 'ن')}
+                </div>\`) : ''}
+                <div class="space-y-0.5">
+                  \${hasAuthor ? \`
+                  <div class="font-bold text-slate-100 flex items-center gap-1">
+                    <span>نویسنده: \${escapeHtml(authorName)}</span>
+                    \${authorUrl && authorUrl !== '#' ? \`<a href="\${escapeHtml(authorUrl)}" target="_blank" class="text-cyan-400 hover:underline text-[10px]">(پروفایل ↗)</a>\` : ''}
+                  </div>
+                  \` : ''}
+                  \${hasDate ? \`
+                  <div class="text-[11px] text-slate-400 font-mono flex items-center gap-1">
+                    <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    <span>انتشار: \${datePublished}</span>
+                    \${dateModified ? \`<span class="text-slate-500">|</span><span>ویرایش: \${dateModified}</span>\` : ''}
+                  </div>
+                  \` : ''}
                 </div>
-                \${datePublished ? \`
-                <div class="text-[11px] text-slate-400 font-mono">
-                  انتشار: \${datePublished}
-                  \${dateModified ? \` | ویرایش: \${dateModified}\` : ''}
-                </div>
-                \` : '<div class="text-[11px] text-slate-500 font-mono">تاریخ انتشار ثبت نشده</div>'}
               </div>
-            </div>
+            \` : ''}
 
-            <div class="flex items-center gap-3 text-[11px] font-mono text-slate-400 border-t sm:border-t-0 pt-2 sm:pt-0 w-full sm:w-auto justify-between sm:justify-end">
+            <div class="flex items-center gap-3 text-[11px] font-mono text-slate-400 \${(!hasAuthor && !hasDate) ? 'w-full justify-between' : 'border-t sm:border-t-0 pt-2 sm:pt-0 w-full sm:w-auto justify-between sm:justify-end'}">
+              \${wordCount > 0 ? \`
               <span class="flex items-center gap-1">
                 <svg class="w-3.5 h-3.5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 مطالعه: \${readingTime} دقیقه
@@ -1142,6 +1167,7 @@ export function renderDashboardHtml(): string {
                 <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                 \${wordCount} کلمه
               </span>
+              \` : ''}
               <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-sans text-[10px]">
                 منبع: \${escapeHtml(sourceName || 'اصلی')}
               </span>
@@ -1149,7 +1175,7 @@ export function renderDashboardHtml(): string {
           </div>
 
           <!-- فیلدهای اختصاصی استخراج‌شده (Custom Fields) -->
-          \${customFields && Object.keys(customFields).length > 0 ? \`
+          \${hasCustomFields ? \`
             <div class="p-4 rounded-xl bg-slate-900/90 border border-cyan-500/40 space-y-2.5 shadow-lg">
               <div class="text-xs font-bold text-cyan-300 flex items-center justify-between pb-2 border-b border-cyan-500/20">
                 <div class="flex items-center gap-1.5">
@@ -1170,7 +1196,7 @@ export function renderDashboardHtml(): string {
           \` : ''}
 
           <!-- تصویر شاخص همراه با متن جایگزین و کپشن -->
-          \${featuredMedia && featuredMedia.source_url ? \`
+          \${hasFeaturedImage ? \`
             <div class="rounded-2xl overflow-hidden border border-slate-800 bg-slate-900/50 shadow-xl">
               <div class="relative">
                 <img src="\${escapeHtml(featuredMedia.source_url)}" class="w-full max-h-96 object-cover" alt="\${escapeHtml(featuredMedia.alt_text || title)}" />
@@ -1191,6 +1217,7 @@ export function renderDashboardHtml(): string {
             </div>
           \` : ''}
 
+          \${hasContent ? \`
           <!-- محتوای اصلی رندر شده با قالب گوتنبرگ وردپرس -->
           <div class="pt-2">
             <div class="text-xs font-bold text-slate-400 mb-2 flex items-center gap-1.5">
@@ -1201,9 +1228,10 @@ export function renderDashboardHtml(): string {
               \${contentHtml}
             </div>
           </div>
+          \` : ''}
 
+          \${hasFaqs ? \`
           <!-- سوالات متداول (FAQ) در صورت وجود -->
-          \${faqs && faqs.length > 0 ? \`
             <div class="p-4 sm:p-5 rounded-2xl border border-sky-500/30 bg-sky-950/20 space-y-3">
               <div class="flex items-center justify-between pb-2 border-b border-sky-500/20">
                 <div class="flex items-center gap-2">
@@ -1226,8 +1254,8 @@ export function renderDashboardHtml(): string {
             </div>
           \` : ''}
 
+          \${hasTags ? \`
           <!-- برچسب‌ها و کلمات کلیدی (Tags Cloud) -->
-          \${tags && tags.length > 0 ? \`
             <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800">
               <div class="text-xs font-bold text-slate-300 mb-2 flex items-center gap-1.5">
                 <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
@@ -1343,10 +1371,10 @@ export function renderDashboardHtml(): string {
     }
 
     function formatDate(dateStr) {
-      if (!dateStr) return '--';
+      if (!dateStr || !dateStr.trim()) return '';
       try {
         const d = new Date(dateStr);
-        if (isNaN(d.getTime())) return dateStr;
+        if (isNaN(d.getTime())) return '';
         return d.toLocaleDateString('fa-IR', {
           year: 'numeric',
           month: 'short',
@@ -1355,7 +1383,7 @@ export function renderDashboardHtml(): string {
           minute: '2-digit'
         });
       } catch {
-        return dateStr;
+        return '';
       }
     }
 

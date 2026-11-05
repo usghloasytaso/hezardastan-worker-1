@@ -1206,10 +1206,13 @@ function normalizeIsoDate(dateStr?: string): string {
 }
 
 function toUtcIso(dateStr: string): string {
+  if (!dateStr || !dateStr.trim()) return '';
   try {
-    return new Date(dateStr).toISOString();
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return '';
+    return d.toISOString();
   } catch {
-    return new Date().toISOString();
+    return '';
   }
 }
 
