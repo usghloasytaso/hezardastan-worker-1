@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS sources (
     image_selector TEXT DEFAULT 'meta[property="og:image"], .featured-image img, article img',
     date_selector TEXT DEFAULT 'time[datetime], meta[property="article:published_time"], .post-date',
     remove_selectors TEXT DEFAULT '.advertisement, .ads, .related-posts, .share-buttons, .social-share, nav, footer, script, style, iframe, .comments',
+    custom_selectors TEXT DEFAULT '',
     custom_script TEXT DEFAULT '',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP

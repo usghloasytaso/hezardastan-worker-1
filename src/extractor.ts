@@ -250,6 +250,39 @@ export function cleanAndParseHtml(
       '.mkd-post-info',
       '.mkd-author-description',
       '.mkd-single-tags-share-holder',
+      // کانتینرهای تگ و برچسب‌های متنی داخل بدنه (تا هرگز درون متن مقاله نشت نکنند)
+      '.jeg_post_tags',
+      '.post-tags',
+      '.entry-tags',
+      '.article-tags',
+      '.tags-links',
+      '.post__tags',
+      '.c-tags',
+      '.post-tag',
+      '.tags',
+      '.tag-holder',
+      '.post-footer-tags',
+      '.entry-terms',
+      '.post-terms',
+      '.post_tags',
+      '.arz-post__tags',
+      '.tag-cloud',
+      // ویجت‌های اشتراک‌گذاری، لایک، بوکمارک و منابع متفرقه داخل بدنه
+      '.jeg_post_source',
+      '.awh-bookmark-content-end',
+      '.addtoany_share_save_container',
+      '.addtoany_content',
+      '[class*="addtoany"]',
+      '.share-buttons',
+      '.social-share',
+      '.jeg_share_button',
+      '.share-float',
+      '[class*="share-button"]',
+      '[class*="post-share"]',
+      '.arz-post__share',
+      '.arz-post__reactions',
+      '.ez-toc-container',
+      '[class*="ez-toc"]',
       '.entry-meta',
       '.post-meta'
     ];
@@ -317,9 +350,43 @@ export function cleanAndParseHtml(
 
     // پاکسازی عناصر هدر و تبلیغات تکراری از درون کانتینر انتخاب‌شده
     if ($root && $root.length > 0) {
-      $root.find('h1, .entry-title, .post-title, .mkd-post-title').remove();
+      $root.find('h1, .entry-title, .post-title, .mkd-post-title, .jeg_post_title').remove();
       $root.find('.mkd-post-image, .featured-image, .post-thumbnail, .post-featured-image, .entry-thumbnail, .mkd-post-info, .mkd-breadcrumbs').remove();
       $root.find('.code-block, [class*="code-block-"], .vv-wrap, [class*="sponsored"], .dc-vibe-inline, .dc-newsletter-cta').remove();
+      
+      // حذف قطعی تمامی کانتینرهای تگ و برچسب‌های متنی از داخل محتوا
+      $root.find('.jeg_post_tags, .post-tags, .entry-tags, .article-tags, .tags-links, .post__tags, .c-tags, .post-tag, .tags, .mkd-single-tags-share-holder, .arz-post__tags, .tag-cloud, [rel="tag"]').remove();
+      $root.find('.jeg_post_source, .awh-bookmark-content-end, .addtoany_share_save_container, .addtoany_content, [class*="addtoany"], .share-buttons, .social-share, .jeg_share_button, .share-float, .arz-post__share, .arz-post__reactions').remove();
+
+      // حذف هر پاراگراف یا باکسی که صرفاً برای نمایش "تگ:" یا "برچسب:" انتهای مطلب استفاده شده است
+      $root.find('p, div, span').each((_: any, el: any) => {
+        const $el = $(el);
+        const t = cleanWhitespace($el.text());
+        if (/^(تگ|برچسب|تگ‌ها|برچسب‌ها|Tags?)\s*[:：]/i.test(t) && t.length < 150) {
+          $el.remove();
+        }
+      });
+
+      // در صورت وجود سلکتور اختصاصی برچسب منبع، حذف عناصر آن از درون محتوا
+      if (source.tags_selector && source.tags_selector.trim()) {
+        const customTagSelectors = splitSelectors(source.tags_selector);
+        for (const tSel of customTagSelectors) {
+          try {
+            $root.find(tSel).each((_: any, el: any) => {
+              const $tagEl = $(el);
+              const $holder = $tagEl.closest('.jeg_post_tags, .post-tags, .entry-tags, .article-tags, .tags-links, .tags, .c-tags, .post-tag, .mkd-single-tags-share-holder, .arz-post__tags, p, div');
+              if ($holder.length > 0) {
+                const holderText = cleanWhitespace($holder.text());
+                if (holderText.length < 150 && (holderText.includes('تگ') || holderText.includes('برچسب') || holderText.includes('Tags') || holderText.includes('Tag:'))) {
+                  $holder.remove();
+                  return;
+                }
+              }
+              $tagEl.remove();
+            });
+          } catch {}
+        }
+      }
     }
 
     // =========================================================================
