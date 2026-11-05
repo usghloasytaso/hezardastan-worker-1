@@ -91,16 +91,27 @@ export function cleanAndParseHtml(
     // ۳. استخراج تیتر اصلی (Title)
     // =========================================================================
     let title = '';
-    if (source.title_selector && source.title_selector.trim()) {
-      try {
-        title = $(source.title_selector).first().text().trim();
-      } catch {}
-    }
-    if (!title && jsonLdInfo.newsArticle?.headline) {
-      title = String(jsonLdInfo.newsArticle.headline).trim();
-    }
-    if (!title) {
-      title = ogTitle || twitterTitle || $('h1').first().text().trim() || pageTitle;
+    if (source.title_selector !== undefined) {
+      if (source.title_selector.trim()) {
+        const candidates = splitSelectors(source.title_selector);
+        for (const sel of candidates) {
+          try {
+            const found = $(sel).first();
+            if (found.length > 0) {
+              const t = cleanWhitespace(found.text());
+              if (t) { title = t; break; }
+            }
+          } catch {}
+        }
+      }
+      // در صورتی که کاربر سلکتور تیتر را کلاً خالی کرده باشد، تیتر استخراج نمی‌شود
+    } else {
+      if (jsonLdInfo.newsArticle?.headline) {
+        title = String(jsonLdInfo.newsArticle.headline).trim();
+      }
+      if (!title) {
+        title = ogTitle || twitterTitle || $('h1').first().text().trim() || pageTitle;
+      }
     }
     title = cleanWhitespace(title);
 
@@ -112,22 +123,59 @@ export function cleanAndParseHtml(
     // =========================================================================
     // ۵. استخراج تاریخ‌های انتشار و ویرایش (date & modified)
     // =========================================================================
-    const { publishedDate: validPublishedDate, modifiedDate: validModifiedDate } = extractDate($, jsonLdInfo, source);
+    let validPublishedDate = '';
+    let validModifiedDate = '';
+    if (source.date_selector !== undefined) {
+      if (source.date_selector.trim()) {
+        const d = extractDate($, jsonLdInfo, source);
+        validPublishedDate = d.publishedDate;
+        validModifiedDate = d.modifiedDate;
+      }
+      // اگر کاربر سلکتور تاریخ را خالی کرده باشد، تاریخ خالی می‌ماند و استخراج نمی‌شود
+    } else {
+      const d = extractDate($, jsonLdInfo, source);
+      validPublishedDate = d.publishedDate;
+      validModifiedDate = d.modifiedDate;
+    }
 
     // =========================================================================
     // ۶. استخراج نویسنده / خبرنگار (Author)
     // =========================================================================
-    const author = extractAuthor($, jsonLdInfo, baseUrl, source);
+    let author: WpAuthor = { name: '', url: '', avatar: '' };
+    if (source.author_selector !== undefined) {
+      if (source.author_selector.trim()) {
+        author = extractAuthor($, jsonLdInfo, baseUrl, source);
+      }
+      // اگر کاربر سلکتور نویسنده را خالی کرده باشد، نویسنده خالی می‌ماند
+    } else {
+      author = extractAuthor($, jsonLdInfo, baseUrl, source);
+    }
 
     // =========================================================================
     // ۷. استخراج دسته‌بندی‌ها (Categories)
     // =========================================================================
-    const categories = extractCategories($, jsonLdInfo, source);
+    let categories: string[] = [];
+    if (source.category_selector !== undefined) {
+      if (source.category_selector.trim()) {
+        categories = extractCategories($, jsonLdInfo, source);
+      }
+      // اگر کاربر سلکتور دسته‌بندی را خالی کرده باشد، دسته‌ها خالی می‌مانند
+    } else {
+      categories = extractCategories($, jsonLdInfo, source);
+    }
 
     // =========================================================================
     // ۸. استخراج برچسب‌ها و کلمات کلیدی (Tags)
     // =========================================================================
-    const tags = extractTags($, jsonLdInfo, source);
+    let tags: string[] = [];
+    if (source.tags_selector !== undefined) {
+      if (source.tags_selector.trim()) {
+        tags = extractTags($, jsonLdInfo, source);
+      }
+      // اگر کاربر سلکتور برچسب را خالی کرده باشد، برچسب‌ها خالی می‌مانند
+    } else {
+      tags = extractTags($, jsonLdInfo, source);
+    }
 
     // =========================================================================
     // ۹. استخراج سوالات متداول (FAQ Schema & Blocks)
@@ -137,7 +185,20 @@ export function cleanAndParseHtml(
     // =========================================================================
     // ۱۰. استخراج تصویر شاخص اولیه (Featured Image)
     // =========================================================================
-    let featuredImage = extractFeaturedImage($, jsonLdInfo, baseUrl, source, ogImage, twitterImage);
+    let featuredImage = '';
+    if (source.image_selector !== undefined) {
+      if (source.image_selector.trim()) {
+        featuredImage = extractFeaturedImage($, jsonLdInfo, baseUrl, source, ogImage, twitterImage);
+      }
+      // اگر کاربر سلکتور تصویر را خالی کرده باشد، عکس شاخص خالی می‌ماند
+    } else {
+      featuredImage = extractFeaturedImage($, jsonLdInfo, baseUrl, source, ogImage, twitterImage);
+    }
+
+    // =========================================================================
+    // ۱۰.۵. استخراج فیلدهای اختصاصی تعریف‌شده توسط کاربر (Custom Fields)
+    // =========================================================================
+    const customFields = extractCustomFields($, source.custom_selectors || '');
 
     // =========================================================================
     // ۱۱. تمیزسازی و یافتن کانتینر بدنه مقاله برای خروجی گوتنبرگ
@@ -318,8 +379,8 @@ export function cleanAndParseHtml(
       }
     });
 
-    // اگر تصویر شاخص تا کنون پیدا نشده باشد، اولین تصویر محتوا را شاخص قرار می‌دهیم
-    if (!featuredImage && images.length > 0) {
+    // اگر تصویر شاخص تا کنون پیدا نشده باشد، و کاربر فیلد تصویر را عمداً پاک نکرده باشد، اولین تصویر محتوا را شاخص قرار می‌دهیم
+    if (!featuredImage && images.length > 0 && !(source.image_selector !== undefined && !source.image_selector.trim())) {
       featuredImage = images[0].src;
     }
 
@@ -516,6 +577,7 @@ export function cleanAndParseHtml(
       tags: tags,
       meta: seoMeta,
       schema: schemaData,
+      custom_fields: customFields,
       stats: {
         reading_time_minutes: readingTime,
         word_count: wordCount,
@@ -544,6 +606,7 @@ export function cleanAndParseHtml(
         slug,
         faq: faqs,
         seo_meta: seoMeta,
+        custom_fields: customFields,
         wp_post: wpRestPost,
         error: 'محتوای متنی صفحه استخراج نشد یا ساختار آن محافظت شده است.'
       };
@@ -564,6 +627,7 @@ export function cleanAndParseHtml(
       slug,
       faq: faqs,
       seo_meta: seoMeta,
+      custom_fields: customFields,
       wp_post: wpRestPost
     };
   } catch (err: any) {
@@ -644,6 +708,68 @@ export function splitSelectors(raw?: string): string[] {
 }
 
 /**
+ * استخراج سلکتورهای اختصاصی تعریف‌شده توسط کاربر
+ * پشتیبانی از فرمت‌های:
+ * ۱. کلید: سلکتور (مثال: روتیتر: .mkd-post-subtitle)
+ * ۲. سلکتور ساده (مثال: .mkd-post-subtitle)
+ */
+export function extractCustomFields(
+  $: cheerio.CheerioAPI,
+  rawSelectors?: string
+): Record<string, string | string[]> {
+  const result: Record<string, string | string[]> = {};
+  if (!rawSelectors || !rawSelectors.trim()) return result;
+
+  const lines = rawSelectors
+    .split(/[\r\n;|]+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  for (const line of lines) {
+    let key = '';
+    let selector = '';
+
+    const colonIndex = line.indexOf(':');
+    if (colonIndex > 0) {
+      key = cleanWhitespace(line.slice(0, colonIndex));
+      selector = line.slice(colonIndex + 1).trim();
+    } else {
+      selector = line.trim();
+      key = selector.replace(/[^a-zA-Z0-9_\u0600-\u06FF]/g, '_').replace(/^_+|_+$/g, '');
+    }
+
+    if (!key || !selector) continue;
+
+    try {
+      const elements = $(selector);
+      if (elements.length === 0) continue;
+
+      if (elements.length === 1) {
+        const el = elements.first();
+        if (el.is('img')) {
+          result[key] = el.attr('src') || el.attr('data-src') || '';
+        } else if (el.is('a') && el.attr('href') && !cleanWhitespace(el.text())) {
+          result[key] = el.attr('href') || '';
+        } else {
+          result[key] = cleanWhitespace(el.text());
+        }
+      } else {
+        const values: string[] = [];
+        elements.each((_: any, el: any) => {
+          const t = cleanWhitespace($(el).text());
+          if (t) values.push(t);
+        });
+        result[key] = values.length > 0 ? (values.length === 1 ? values[0] : values) : '';
+      }
+    } catch (e) {
+      console.warn(`خطا در پردازش سلکتور اختصاصی [${key}: ${selector}]:`, e);
+    }
+  }
+
+  return result;
+}
+
+/**
  * استخراج نویسنده / خبرنگار
  */
 function extractAuthor(
@@ -657,7 +783,7 @@ function extractAuthor(
   let avatar = '';
 
   // ۱. اولویت اول: بررسی سلکتورهای اختصاصی تعریف‌شده برای این منبع
-  if (source.author_selector) {
+  if (source.author_selector && source.author_selector.trim()) {
     const customSelectors = splitSelectors(source.author_selector);
     for (const sel of customSelectors) {
       try {
@@ -673,6 +799,12 @@ function extractAuthor(
         }
       } catch {}
     }
+    name = cleanWhitespace(name.replace(/^(نویسنده|خبرنگار|نوشته شده توسط|گزارش از|by|author)\s*[:：]/i, ''));
+    return {
+      name,
+      url: url ? resolveUrl(url, baseUrl) : undefined,
+      avatar: avatar || undefined
+    };
   }
 
   // ۲. از داده‌های ساختاریافته JSON-LD
@@ -771,7 +903,7 @@ function extractCategories(
   const catSet = new Set<string>();
 
   // ۱. اولویت اول: بررسی سلکتورهای اختصاصی دسته‌بندی منبع
-  if (source.category_selector) {
+  if (source.category_selector && source.category_selector.trim()) {
     const customSelectors = splitSelectors(source.category_selector);
     for (const sel of customSelectors) {
       try {
@@ -783,6 +915,7 @@ function extractCategories(
         });
       } catch {}
     }
+    return Array.from(catSet);
   }
 
   // ۲. دسته‌بندی پیش‌فرض منبع
@@ -848,53 +981,63 @@ function extractTags(
     }
   };
 
-  // ۱. اولویت اول: بررسی سلکتورهای اختصاصی برچسب‌های منبع
-  if (source.tags_selector) {
+  // ۱. اولویت اول: بررسی سلکتور اختصاصی برچسب‌های منبع
+  if (source.tags_selector && source.tags_selector.trim()) {
     const customSelectors = splitSelectors(source.tags_selector);
     for (const sel of customSelectors) {
       try {
         $(sel).each((_: any, el: any) => {
-          addTag($(el).text());
+          const $el = $(el);
+          // فیلتر کردن قطعی لینک‌های هدر، فوتر، منو یا سایدبار
+          if ($el.closest('header, footer, nav, aside, .sidebar, #sidebar, .tag-cloud, .widget, .menu, .navigation').length > 0) {
+            return;
+          }
+          addTag($el.text());
         });
       } catch {}
     }
+    // بازگرداندن برچسب‌های اختصاصی بدون اضافه کردن هیچ تگ متفرقه
+    return Array.from(tagSet).filter((t) => t.length > 1 && t.length < 50);
   }
 
-  // ۲. از داده‌های ساختاریافته JSON-LD keywords
-  if (jsonLdInfo.newsArticle?.keywords) {
-    const kw = jsonLdInfo.newsArticle.keywords;
-    if (Array.isArray(kw)) {
-      kw.forEach((k: any) => addTag(String(k)));
-    } else if (typeof kw === 'string') {
-      kw.split(/[,،]/).forEach((k: string) => addTag(k));
-    }
-  }
-
-  // ۳. از متاتگ‌های article:tag و keywords
-  $('meta[property="article:tag"]').each((_: any, el: any) => {
-    const val = $(el).attr('content');
-    if (val) addTag(val);
-  });
-
-  const metaKw =
-    $('meta[name="keywords"]').attr('content') || $('meta[name="news_keywords"]').attr('content') || '';
-  if (metaKw) {
-    metaKw.split(/[,،]/).forEach((k: string) => addTag(k));
-  }
-
-  // ۴. از سلکتورهای عمومی و هوشمند سایت‌های خبری مختلف (WordPress, JNews, Cointelegraph, etc.)
-  const defaultTagSelectors = [
-    'a[href*="/tags/"], a[href*="/tag/"]',
+  // ۲. استخراج برچسب‌ها منحصراً از کانتینرهای تگ‌های مقاله (نه از کل بدنه یا لینک‌های سراسری سایت)
+  const articleTagContainers = [
+    '.mkd-single-tags-share-holder a',
+    '.post-tags a',
+    '.entry-tags a',
+    '.article-tags a',
+    '[rel="tag"]',
+    '.tags-links a',
     '.jeg_post_tags a',
-    '.tags a, .tag a, .post-tags a, .entry-tags a, .article-tags a, [rel="tag"], .tags-list a, .post__tags a, .c-tags a',
-    '[class*="tags"] a, [class*="tag-item"] a, .tag-cloud a'
+    '.post__tags a',
+    '.c-tags a'
   ];
-  for (const sel of defaultTagSelectors) {
+  for (const sel of articleTagContainers) {
     try {
       $(sel).each((_: any, el: any) => {
-        addTag($(el).text());
+        const $el = $(el);
+        if ($el.closest('header, footer, nav, aside, .sidebar, #sidebar, .tag-cloud, .widget, .menu, .navigation').length === 0) {
+          addTag($el.text());
+        }
       });
     } catch {}
+  }
+
+  // ۳. از داده‌های ساختاریافته اختصاصی همین مقاله (متا تگ article:tag و JSON-LD keywords)
+  if (tagSet.size === 0) {
+    $('meta[property="article:tag"]').each((_: any, el: any) => {
+      const val = $(el).attr('content');
+      if (val) addTag(val);
+    });
+
+    if (jsonLdInfo.newsArticle?.keywords) {
+      const kw = jsonLdInfo.newsArticle.keywords;
+      if (Array.isArray(kw)) {
+        kw.forEach((k: any) => addTag(String(k)));
+      } else if (typeof kw === 'string') {
+        kw.split(/[,،]/).forEach((k: string) => addTag(k));
+      }
+    }
   }
 
   return Array.from(tagSet).filter((t) => t.length > 1 && t.length < 50);
@@ -914,7 +1057,7 @@ function extractFeaturedImage(
   let imgUrl = '';
 
   // ۱. بررسی سلکتور اختصاصی منبع
-  if (source.image_selector) {
+  if (source.image_selector && source.image_selector.trim()) {
     const customSelectors = splitSelectors(source.image_selector);
     for (const sel of customSelectors) {
       try {
@@ -933,6 +1076,10 @@ function extractFeaturedImage(
         }
       } catch {}
     }
+    if (imgUrl && baseUrl) {
+      imgUrl = resolveUrl(imgUrl, baseUrl);
+    }
+    return imgUrl;
   }
 
   // ۲. از JSON-LD
@@ -970,7 +1117,7 @@ function extractDate(
   let dateModified = '';
 
   // ۱. بررسی سلکتور اختصاصی تاریخ منبع
-  if (source.date_selector) {
+  if (source.date_selector && source.date_selector.trim()) {
     const customSelectors = splitSelectors(source.date_selector);
     for (const sel of customSelectors) {
       try {
@@ -981,6 +1128,9 @@ function extractDate(
         }
       } catch {}
     }
+    const validPublishedDate = normalizeIsoDate(datePublished);
+    const validModifiedDate = normalizeIsoDate(dateModified) || validPublishedDate;
+    return { publishedDate: validPublishedDate, modifiedDate: validModifiedDate };
   }
 
   // ۲. از داده‌های ساختاریافته JSON-LD

@@ -91,6 +91,7 @@ app.post('/api/extract/test', async (c) => {
     image_selector?: string;
     date_selector?: string;
     remove_selectors?: string;
+    custom_selectors?: string;
     custom_script?: string;
   }>();
 
@@ -107,6 +108,7 @@ app.post('/api/extract/test', async (c) => {
     image_selector: body.image_selector,
     date_selector: body.date_selector,
     remove_selectors: body.remove_selectors,
+    custom_selectors: body.custom_selectors,
     custom_script: body.custom_script
   });
 

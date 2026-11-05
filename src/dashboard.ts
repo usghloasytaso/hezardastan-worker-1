@@ -190,6 +190,13 @@ export function renderDashboardHtml(): string {
                   <label class="block text-[11px] font-semibold text-slate-300 mb-1">سلکتور تاریخ انتشار (Date):</label>
                   <input type="text" id="testDateSelector" value="time[datetime], meta[property=&quot;article:published_time&quot;], .post-date, .entry-date" class="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
                 </div>
+                <div>
+                  <label class="block text-[11px] font-semibold text-slate-300 mb-1">
+                    سلکتورهای اختصاصی (Custom Selectors):
+                    <span class="text-[10px] text-cyan-400 font-normal">کلید: سلکتور (برای روتیتر، منبع، قیمت، کد خبر و...)</span>
+                  </label>
+                  <textarea id="testCustomSelectors" rows="2" placeholder="روتیتر: .mkd-post-subtitle&#10;منبع: .source-url" class="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2 focus:border-cyan-500 focus:outline-none dir-ltr text-left custom-scroll"></textarea>
+                </div>
               </div>
             </details>
           </div>
@@ -424,6 +431,13 @@ export function renderDashboardHtml(): string {
                 <label class="block text-[11px] font-semibold text-slate-300 mb-1">سلکتور تاریخ انتشار (Date):</label>
                 <input type="text" id="modalDateSelector" value="time[datetime], meta[property=&quot;article:published_time&quot;], .post-date, .entry-date" class="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
               </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-300 mb-1">
+                  سلکتورهای اختصاصی (Custom Selectors):
+                  <span class="text-[10px] text-cyan-400 font-normal">کلید: سلکتور (جهت استخراج داده‌های فرعی دلخواه روی این منبع)</span>
+                </label>
+                <textarea id="modalCustomSelectors" rows="2" placeholder="روتیتر: .mkd-post-subtitle&#10;منبع: .source-url" class="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2 focus:border-cyan-500 focus:outline-none dir-ltr text-left custom-scroll"></textarea>
+              </div>
             </div>
           </details>
         </div>
@@ -616,12 +630,13 @@ export function renderDashboardHtml(): string {
     const DEFAULT_SELECTORS = {
       title_selector: 'h1, .entry-title, .post-title, .mkd-post-title, .jeg_post_title',
       content_selector: '.mkd-post-text-inner, .mkd-post-text, .entry-content, .content-inner, .jeg_inner_content, .post-content, article',
-      tags_selector: 'a[href*="/tags/"], a[href*="/tag/"], .tags a, .tag a, .post-tags a, [rel="tag"], .jeg_post_tags a',
+      tags_selector: '.mkd-single-tags-share-holder a, .post-tags a, .entry-tags a, .article-tags a, [rel="tag"], .tags-links a, .jeg_post_tags a, .tags a',
       author_selector: '[rel="author"], .author-name, .author, .byline, a[href*="/author/"], .jeg_meta_author a, .jeg_author_name',
       image_selector: 'meta[property="og:image"], .featured-image img, article img, .entry-content img',
       category_selector: '.breadcrumb a, .post-category a, .entry-category a, a[href*="/category/"], meta[property="article:section"]',
       date_selector: 'time[datetime], meta[property="article:published_time"], .post-date, .entry-date',
-      remove_selectors: '.code-block, [class*="code-block-"], .vv-wrap, [class*="sponsored"], .sponsored, .dc-vibe-inline, .user-sentiment-vote, .dc-newsletter-cta, .advertisement, .ads, .share, .comments'
+      remove_selectors: '.code-block, [class*="code-block-"], .vv-wrap, [class*="sponsored"], .sponsored, .dc-vibe-inline, .user-sentiment-vote, .dc-newsletter-cta, .advertisement, .ads, .share, .comments',
+      custom_selectors: ''
     };
 
     function openNewSourceModal() {
@@ -639,6 +654,7 @@ export function renderDashboardHtml(): string {
       document.getElementById('modalCategorySelector').value = DEFAULT_SELECTORS.category_selector;
       document.getElementById('modalDateSelector').value = DEFAULT_SELECTORS.date_selector;
       document.getElementById('modalRemoveSelectors').value = DEFAULT_SELECTORS.remove_selectors;
+      document.getElementById('modalCustomSelectors').value = DEFAULT_SELECTORS.custom_selectors;
       document.getElementById('sourceModal').classList.remove('hidden');
     }
 
@@ -659,6 +675,7 @@ export function renderDashboardHtml(): string {
       document.getElementById('modalCategorySelector').value = s.category_selector || DEFAULT_SELECTORS.category_selector;
       document.getElementById('modalDateSelector').value = s.date_selector || DEFAULT_SELECTORS.date_selector;
       document.getElementById('modalRemoveSelectors').value = s.remove_selectors || DEFAULT_SELECTORS.remove_selectors;
+      document.getElementById('modalCustomSelectors').value = s.custom_selectors || DEFAULT_SELECTORS.custom_selectors;
       document.getElementById('sourceModal').classList.remove('hidden');
     }
 
@@ -681,6 +698,7 @@ export function renderDashboardHtml(): string {
         image_selector: document.getElementById('modalImageSelector').value.trim(),
         date_selector: document.getElementById('modalDateSelector').value.trim(),
         remove_selectors: document.getElementById('modalRemoveSelectors').value.trim(),
+        custom_selectors: document.getElementById('modalCustomSelectors').value.trim(),
       };
 
       if (!body.name || !body.site_url || !body.rss_url) {
@@ -738,6 +756,7 @@ export function renderDashboardHtml(): string {
         document.getElementById('testCategorySelector').value = s.category_selector || DEFAULT_SELECTORS.category_selector;
         document.getElementById('testDateSelector').value = s.date_selector || DEFAULT_SELECTORS.date_selector;
         document.getElementById('testRemoveSelectors').value = s.remove_selectors || DEFAULT_SELECTORS.remove_selectors;
+        document.getElementById('testCustomSelectors').value = s.custom_selectors || DEFAULT_SELECTORS.custom_selectors;
         btnSave.disabled = false;
         btnSave.classList.remove('opacity-50', 'cursor-not-allowed');
       }
@@ -815,6 +834,7 @@ export function renderDashboardHtml(): string {
             image_selector: document.getElementById('testImageSelector').value.trim(),
             date_selector: document.getElementById('testDateSelector').value.trim(),
             remove_selectors: document.getElementById('testRemoveSelectors').value.trim(),
+            custom_selectors: (document.getElementById('testCustomSelectors')?.value || '').trim()
           })
         });
 
@@ -828,10 +848,11 @@ export function renderDashboardHtml(): string {
 
           const wp = data.wp_post || {};
           const wordCount = wp.stats?.word_count || 0;
-          const authorName = wp.author?.name || 'هیئت تحریریه';
+          const authorName = wp.author?.name ? wp.author.name : '(بدون نویسنده)';
           const tagCount = wp.tags?.length || 0;
           const faqCount = wp.schema?.faq?.length || 0;
-          metaStats.innerText = \`نویسنده: \${authorName} | کلمات: \${wordCount} | برچسب‌ها: \${tagCount} | سوالات متداول: \${faqCount}\`;
+          const customCount = Object.keys(wp.custom_fields || {}).length;
+          metaStats.innerText = \`نویسنده: \${authorName} | کلمات: \${wordCount} | برچسب‌ها: \${tagCount}\${customCount ? \` | فیلدهای اختصاصی: \${customCount}\` : ''} | سوالات متداول: \${faqCount}\`;
 
           // ۱. تب پیش‌نمایش بصری رسمی وردپرس
           visualBox.innerHTML = buildWordPressVisualHtml(wp, 'تست زنده', url);
@@ -877,6 +898,7 @@ export function renderDashboardHtml(): string {
         image_selector: document.getElementById('testImageSelector').value.trim(),
         date_selector: document.getElementById('testDateSelector').value.trim(),
         remove_selectors: document.getElementById('testRemoveSelectors').value.trim(),
+        custom_selectors: (document.getElementById('testCustomSelectors')?.value || '').trim()
       };
 
       try {
@@ -1049,13 +1071,13 @@ export function renderDashboardHtml(): string {
     function buildWordPressVisualHtml(wpPost, sourceName, fallbackUrl) {
       if (!wpPost) return '<div class="text-slate-500 p-8 text-center">محتوایی یافت نشد.</div>';
 
-      const title = (wpPost.title && wpPost.title.rendered) || wpPost.title || 'بدون تیتر';
-      const authorName = (wpPost.author && wpPost.author.name) || wpPost.author_name || 'هیئت تحریریه';
+      const title = (wpPost.title && wpPost.title.rendered) || wpPost.title || '';
+      const authorName = (wpPost.author && wpPost.author.name) || wpPost.author_name || '';
       const authorUrl = (wpPost.author && wpPost.author.url) || '#';
       const authorAvatar = (wpPost.author && wpPost.author.avatar) || '';
-      const datePublished = formatDate(wpPost.date || wpPost.published_at);
+      const datePublished = wpPost.date || wpPost.published_at ? formatDate(wpPost.date || wpPost.published_at) : '';
       const dateModified = wpPost.modified && wpPost.modified !== wpPost.date ? formatDate(wpPost.modified) : '';
-      const categories = wpPost.categories || (wpPost.category ? [wpPost.category] : ['عمومی']);
+      const categories = Array.isArray(wpPost.categories) ? wpPost.categories : (wpPost.category ? [wpPost.category] : []);
       let tags = wpPost.tags || [];
       if (typeof tags === 'string') {
         try { tags = JSON.parse(tags); } catch { tags = tags.split(','); }
@@ -1066,39 +1088,48 @@ export function renderDashboardHtml(): string {
       const wordCount = (wpPost.stats && wpPost.stats.word_count) || (contentHtml.split(/\s+/).length);
       const faqs = (wpPost.schema && wpPost.schema.faq) || wpPost.faq || [];
       const seoMeta = wpPost.meta || wpPost.seo_meta || {};
+      const customFields = wpPost.custom_fields || (wpPost.wp_post && wpPost.wp_post.custom_fields) || {};
       const slug = wpPost.slug || '';
       const canonical = (seoMeta && seoMeta.canonical_url) || wpPost.link || fallbackUrl || '#';
 
       return \`
         <div class="space-y-5 max-w-4xl mx-auto pb-6 text-start" dir="auto">
 
+          \${categories && categories.length > 0 ? \`
           <!-- نوار دسته‌بندی‌ها -->
           <div class="flex flex-wrap items-center gap-1.5" dir="auto">
             <span class="text-[11px] font-bold text-slate-400 ml-1">دسته‌بندی‌ها:</span>
             \${categories.map(c => \`<span class="px-2.5 py-0.5 rounded-lg bg-blue-500/15 text-blue-300 border border-blue-500/30 text-xs font-semibold">\${escapeHtml(c)}</span>\`).join('')}
           </div>
+          \` : ''}
 
           <!-- تیتر اصلی خبر -->
           <h1 class="text-xl sm:text-2xl lg:text-3xl font-extrabold text-white leading-snug tracking-tight text-start" dir="auto">
-            \${escapeHtml(title)}
+            \${escapeHtml(title || '(بدون تیتر)')}
           </h1>
 
           <!-- نوار مشخصات نویسنده، تاریخ و زمان مطالعه -->
           <div class="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 text-xs text-slate-300">
             <div class="flex items-center gap-2.5">
-              \${authorAvatar ? \`<img src="\${escapeHtml(authorAvatar)}" class="w-8 h-8 rounded-full border border-slate-700 object-cover" alt="Author" />\` : \`
+              \${authorName ? (authorAvatar ? \`<img src="\${escapeHtml(authorAvatar)}" class="w-8 h-8 rounded-full border border-slate-700 object-cover" alt="Author" />\` : \`
               <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-cyan-600 to-blue-600 flex items-center justify-center text-white font-bold text-xs shrink-0 shadow">
                 \${escapeHtml(authorName.charAt(0) || 'ن')}
-              </div>\`}
+              </div>\`) : \`
+              <div class="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-500 text-xs shrink-0">
+                —
+              </div>
+              \`}
               <div>
                 <div class="font-bold text-slate-100 flex items-center gap-1">
-                  <span>نویسنده: \${escapeHtml(authorName)}</span>
+                  <span>\${authorName ? \`نویسنده: \${escapeHtml(authorName)}\` : '<span class="text-slate-500 font-normal">بدون نویسنده</span>'}</span>
                   \${authorUrl && authorUrl !== '#' ? \`<a href="\${escapeHtml(authorUrl)}" target="_blank" class="text-cyan-400 hover:underline text-[10px]">(پروفایل ↗)</a>\` : ''}
                 </div>
+                \${datePublished ? \`
                 <div class="text-[11px] text-slate-400 font-mono">
                   انتشار: \${datePublished}
                   \${dateModified ? \` | ویرایش: \${dateModified}\` : ''}
                 </div>
+                \` : '<div class="text-[11px] text-slate-500 font-mono">تاریخ انتشار ثبت نشده</div>'}
               </div>
             </div>
 
@@ -1116,6 +1147,27 @@ export function renderDashboardHtml(): string {
               </span>
             </div>
           </div>
+
+          <!-- فیلدهای اختصاصی استخراج‌شده (Custom Fields) -->
+          \${customFields && Object.keys(customFields).length > 0 ? \`
+            <div class="p-4 rounded-xl bg-slate-900/90 border border-cyan-500/40 space-y-2.5 shadow-lg">
+              <div class="text-xs font-bold text-cyan-300 flex items-center justify-between pb-2 border-b border-cyan-500/20">
+                <div class="flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+                  <span>فیلدهای اختصاصی استخراج‌شده (Custom Fields):</span>
+                </div>
+                <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">\${Object.keys(customFields).length} مورد</span>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                \${Object.entries(customFields).map(([k, v]) => \`
+                  <div class="p-3 rounded-lg bg-slate-800/90 border border-slate-700/80 flex flex-col gap-1">
+                    <span class="text-cyan-400 font-bold text-[11px]">\${escapeHtml(k)}:</span>
+                    <span class="text-slate-100 font-medium leading-relaxed">\${Array.isArray(v) ? v.map(item => escapeHtml(item)).join('، ') : escapeHtml(String(v))}</span>
+                  </div>
+                \`).join('')}
+              </div>
+            </div>
+          \` : ''}
 
           <!-- تصویر شاخص همراه با متن جایگزین و کپشن -->
           \${featuredMedia && featuredMedia.source_url ? \`

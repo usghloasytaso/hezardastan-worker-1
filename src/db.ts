@@ -79,9 +79,9 @@ export async function createSource(db: D1Database, source: Source): Promise<numb
         name, site_url, rss_url, category, is_active,
         title_selector, content_selector, author_selector, tags_selector,
         category_selector, image_selector, date_selector,
-        remove_selectors, custom_script
+        remove_selectors, custom_selectors, custom_script
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `)
     .bind(
       source.name || '',
@@ -92,11 +92,12 @@ export async function createSource(db: D1Database, source: Source): Promise<numb
       source.title_selector || 'h1, .entry-title, .post-title',
       source.content_selector || 'article, .post-content, .entry-content, .article-body, .story-body, main',
       source.author_selector || '[rel="author"], .author-name, .author, .byline, a[href*="/author/"]',
-      source.tags_selector || 'a[href*="/tags/"], a[href*="/tag/"], .tags a, .tag a, .post-tags a, [rel="tag"], .jeg_post_tags a',
+      source.tags_selector || '.mkd-single-tags-share-holder a, .post-tags a, .entry-tags a, .article-tags a, [rel="tag"], .tags-links a, .jeg_post_tags a, .tags a',
       source.category_selector || '.breadcrumb a, .post-category a, .entry-category a',
       source.image_selector || 'meta[property="og:image"], .featured-image img, article img',
       source.date_selector || 'time[datetime], meta[property="article:published_time"], .post-date',
       source.remove_selectors || '.advertisement, .ads, .related-posts, .share-buttons, .social-share, nav, footer, script, style, iframe, .comments',
+      source.custom_selectors || '',
       source.custom_script || ''
     )
     .run();
@@ -118,7 +119,7 @@ export async function updateSource(
       SET name = ?, site_url = ?, rss_url = ?, category = ?, is_active = ?,
           title_selector = ?, content_selector = ?, author_selector = ?, tags_selector = ?,
           category_selector = ?, image_selector = ?, date_selector = ?,
-          remove_selectors = ?, custom_script = ?,
+          remove_selectors = ?, custom_selectors = ?, custom_script = ?,
           updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `)
@@ -136,6 +137,7 @@ export async function updateSource(
       source.image_selector ?? current.image_selector,
       source.date_selector ?? current.date_selector,
       source.remove_selectors ?? current.remove_selectors,
+      source.custom_selectors ?? current.custom_selectors,
       source.custom_script ?? current.custom_script,
       id
     )

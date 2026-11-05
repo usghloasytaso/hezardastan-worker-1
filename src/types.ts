@@ -13,6 +13,7 @@ export interface Source {
   image_selector?: string;
   date_selector?: string;
   remove_selectors?: string;
+  custom_selectors?: string;
   custom_script?: string;
   created_at?: string;
   updated_at?: string;
@@ -125,6 +126,7 @@ export interface WpRestPost {
   images: ExtractedImage[];
   links: ExtractedLink[];
   cleaned_text: string;
+  custom_fields?: Record<string, string | string[]>;
 }
 
 export interface Article {
@@ -163,6 +165,7 @@ export interface ExtractedResult {
   faq: WpFaqItem[];
   seo_meta: WpSeoMeta;
   wp_post: WpRestPost;
+  custom_fields?: Record<string, string | string[]>;
   error?: string;
 }
 
