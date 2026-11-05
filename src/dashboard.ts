@@ -138,58 +138,52 @@ export function renderDashboardHtml(): string {
             <input type="url" id="testUrl" placeholder="https://example.com/news/1234" class="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs sm:text-sm rounded-xl p-2.5 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
           </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs font-semibold text-slate-300 mb-1">سلکتور تیتر (Title):</label>
-              <input type="text" id="testTitleSelector" value="h1" placeholder="h1, .entry-title" class="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2.5 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
-            </div>
-            <div>
-              <label class="block text-xs font-semibold text-slate-300 mb-1">سلکتور محتوا (Content):</label>
-              <input type="text" id="testContentSelector" value="article, .post-content, .entry-content" class="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2.5 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
-            </div>
-          </div>
-
-          <div>
-            <label class="block text-xs font-semibold text-slate-300 mb-1">عناصر مزاحم حذفی (Remove):</label>
-            <input type="text" id="testRemoveSelectors" value=".advertisement, .ads, .share, .comments" class="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2.5 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
-          </div>
-
-          <!-- تنظیمات تکمیلی سلکتورها (اختیاری جهت کنترل صددرصدی برچسب، نویسنده و...) -->
-          <details class="group rounded-xl border border-slate-800 bg-slate-900/60 p-2.5 text-xs text-slate-300">
-            <summary class="cursor-pointer font-semibold text-slate-400 hover:text-cyan-400 flex items-center justify-between select-none">
-              <span class="flex items-center gap-1.5">
-                <span>⚙️ سایر سلکتورها (برچسب‌ها، نویسنده، عکس و دسته‌بندی)</span>
-                <span class="text-[10px] text-slate-500 font-normal">(اختیاری - موتور هوشمند خودکار تشخیص می‌دهد)</span>
-              </span>
-              <span class="transition group-open:rotate-180 text-slate-500 text-[10px]">▼</span>
-            </summary>
-            <div class="mt-2.5 pt-2.5 border-t border-slate-800 space-y-2.5">
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                <div>
-                  <label class="block text-[11px] text-slate-400 mb-1">سلکتور برچسب‌ها (Tags):</label>
-                  <input type="text" id="testTagsSelector" placeholder="پیش‌فرض هوشمند (یا مثلاً .jeg_post_tags a)" class="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-lg p-2 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
-                </div>
-                <div>
-                  <label class="block text-[11px] text-slate-400 mb-1">سلکتور نویسنده (Author):</label>
-                  <input type="text" id="testAuthorSelector" placeholder="پیش‌فرض هوشمند (یا مثلاً .author-name)" class="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-lg p-2 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
-                </div>
+          <!-- تنظیم تمام سلکتورهای استخراج (شفاف، با مقادیر واقعی و قابل ویرایش کامل) -->
+          <div class="space-y-2.5">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-300 mb-1">سلکتور تیتر (Title):</label>
+                <input type="text" id="testTitleSelector" value="h1, .entry-title, .post-title, .jeg_post_title" class="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
               </div>
-              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                <div>
-                  <label class="block text-[11px] text-slate-400 mb-1">سلکتور دسته‌بندی:</label>
-                  <input type="text" id="testCategorySelector" placeholder="پیش‌فرض هوشمند" class="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-lg p-2 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
-                </div>
-                <div>
-                  <label class="block text-[11px] text-slate-400 mb-1">سلکتور تصویر شاخص:</label>
-                  <input type="text" id="testImageSelector" placeholder="پیش‌فرض هوشمند" class="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-lg p-2 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
-                </div>
-                <div>
-                  <label class="block text-[11px] text-slate-400 mb-1">سلکتور تاریخ:</label>
-                  <input type="text" id="testDateSelector" placeholder="پیش‌فرض هوشمند" class="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-lg p-2 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
-                </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-300 mb-1">سلکتور محتوا (Content):</label>
+                <input type="text" id="testContentSelector" value="article, .post-content, .entry-content, .content-inner, .jeg_inner_content, main" class="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
               </div>
             </div>
-          </details>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-300 mb-1">سلکتور برچسب‌ها (Tags):</label>
+                <input type="text" id="testTagsSelector" value="a[href*=&quot;/tags/&quot;], a[href*=&quot;/tag/&quot;], .tags a, .tag a, .post-tags a, [rel=&quot;tag&quot;], .jeg_post_tags a" class="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-300 mb-1">سلکتور نویسنده (Author):</label>
+                <input type="text" id="testAuthorSelector" value="[rel=&quot;author&quot;], .author-name, .author, .byline, a[href*=&quot;/author/&quot;], .jeg_meta_author a, .jeg_author_name" class="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-300 mb-1">سلکتور تصویر شاخص (Featured Image):</label>
+                <input type="text" id="testImageSelector" value="meta[property=&quot;og:image&quot;], .featured-image img, article img, .entry-content img" class="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-300 mb-1">سلکتور دسته‌بندی (Category):</label>
+                <input type="text" id="testCategorySelector" value=".breadcrumb a, .post-category a, .entry-category a, a[href*=&quot;/category/&quot;], meta[property=&quot;article:section&quot;]" class="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-300 mb-1">سلکتور تاریخ انتشار (Date):</label>
+                <input type="text" id="testDateSelector" value="time[datetime], meta[property=&quot;article:published_time&quot;], .post-date, .entry-date" class="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-300 mb-1">عناصر مزاحم حذفی (Remove):</label>
+                <input type="text" id="testRemoveSelectors" value=".advertisement, .ads, .share, .social-share, .comments, nav, footer, script, style, iframe" class="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
+              </div>
+            </div>
+          </div>
 
           <div class="flex items-center gap-2 pt-1">
             <button id="btnRunTest" onclick="runLiveTest()" class="flex-1 py-2.5 bg-cyan-600 hover:bg-cyan-500 transition text-white rounded-xl text-xs sm:text-sm font-bold shadow-md flex items-center justify-center gap-1.5">
@@ -369,59 +363,52 @@ export function renderDashboardHtml(): string {
           </div>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-semibold text-slate-300 mb-1">سلکتور تیتر خبر (Title):</label>
-            <input type="text" id="modalTitleSelector" value="h1" placeholder="h1, .entry-title" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs sm:text-sm rounded-xl p-2.5 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-slate-300 mb-1">سلکتور محتوا (Content):</label>
-            <input type="text" id="modalContentSelector" value="article, .post-content, .entry-content" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs sm:text-sm rounded-xl p-2.5 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
-          </div>
-        </div>
-
-        <div>
-          <label class="block text-xs font-semibold text-slate-300 mb-1">عناصر مزاحم حذفی (Remove):</label>
-          <input type="text" id="modalRemoveSelectors" value=".advertisement, .ads, .share, .comments" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs sm:text-sm rounded-xl p-2.5 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
-        </div>
-
-        <!-- تنظیمات تکمیلی سلکتورها (اختیاری جهت کنترل صددرصدی برچسب، نویسنده و...) -->
-        <details class="group rounded-xl border border-slate-800 bg-slate-950/60 p-2.5 text-xs text-slate-300">
-          <summary class="cursor-pointer font-semibold text-slate-400 hover:text-cyan-400 flex items-center justify-between select-none">
-            <span class="flex items-center gap-1.5">
-              <span>⚙️ سایر سلکتورها (برچسب‌ها، نویسنده، عکس و دسته‌بندی)</span>
-              <span class="text-[10px] text-slate-500 font-normal">(اختیاری - موتور هوشمند خودکار تشخیص می‌دهد)</span>
-            </span>
-            <span class="transition group-open:rotate-180 text-slate-500 text-[10px]">▼</span>
-          </summary>
-          <div class="mt-2.5 pt-2.5 border-t border-slate-800 space-y-2.5">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              <div>
-                <label class="block text-[11px] text-slate-400 mb-1">سلکتور برچسب‌ها (Tags):</label>
-                <input type="text" id="modalTagsSelector" placeholder="پیش‌فرض هوشمند (یا مثلاً .jeg_post_tags a)" class="w-full bg-slate-900 border border-slate-800 text-slate-200 text-xs rounded-lg p-2 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
-              </div>
-              <div>
-                <label class="block text-[11px] text-slate-400 mb-1">سلکتور نویسنده (Author):</label>
-                <input type="text" id="modalAuthorSelector" placeholder="پیش‌فرض هوشمند (یا مثلاً .author-name)" class="w-full bg-slate-900 border border-slate-800 text-slate-200 text-xs rounded-lg p-2 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
-              </div>
+        <!-- تنظیم سلکتورهای استخراج وردپرس (همگی شفاف، عیان و قابل ویرایش کامل) -->
+        <div class="space-y-3 pt-1 border-t border-slate-800/80">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">سلکتور تیتر خبر (Title):</label>
+              <input type="text" id="modalTitleSelector" value="h1, .entry-title, .post-title, .jeg_post_title" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs sm:text-sm rounded-xl p-2.5 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-              <div>
-                <label class="block text-[11px] text-slate-400 mb-1">سلکتور دسته‌بندی:</label>
-                <input type="text" id="modalCategorySelector" placeholder="پیش‌فرض هوشمند" class="w-full bg-slate-900 border border-slate-800 text-slate-200 text-xs rounded-lg p-2 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
-              </div>
-              <div>
-                <label class="block text-[11px] text-slate-400 mb-1">سلکتور تصویر شاخص:</label>
-                <input type="text" id="modalImageSelector" placeholder="پیش‌فرض هوشمند" class="w-full bg-slate-900 border border-slate-800 text-slate-200 text-xs rounded-lg p-2 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
-              </div>
-              <div>
-                <label class="block text-[11px] text-slate-400 mb-1">سلکتور تاریخ:</label>
-                <input type="text" id="modalDateSelector" placeholder="پیش‌فرض هوشمند" class="w-full bg-slate-900 border border-slate-800 text-slate-200 text-xs rounded-lg p-2 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
-              </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">سلکتور محتوا (Content):</label>
+              <input type="text" id="modalContentSelector" value="article, .post-content, .entry-content, .content-inner, .jeg_inner_content, main" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs sm:text-sm rounded-xl p-2.5 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
             </div>
           </div>
-        </details>
-      </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">سلکتور برچسب‌ها (Tags):</label>
+              <input type="text" id="modalTagsSelector" value="a[href*=&quot;/tags/&quot;], a[href*=&quot;/tag/&quot;], .tags a, .tag a, .post-tags a, [rel=&quot;tag&quot;], .jeg_post_tags a" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs sm:text-sm rounded-xl p-2.5 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">سلکتور نویسنده (Author):</label>
+              <input type="text" id="modalAuthorSelector" value="[rel=&quot;author&quot;], .author-name, .author, .byline, a[href*=&quot;/author/&quot;], .jeg_meta_author a, .jeg_author_name" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs sm:text-sm rounded-xl p-2.5 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">سلکتور تصویر شاخص (Featured Image):</label>
+              <input type="text" id="modalImageSelector" value="meta[property=&quot;og:image&quot;], .featured-image img, article img, .entry-content img" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs sm:text-sm rounded-xl p-2.5 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">سلکتور دسته‌بندی (Category):</label>
+              <input type="text" id="modalCategorySelector" value=".breadcrumb a, .post-category a, .entry-category a, a[href*=&quot;/category/&quot;], meta[property=&quot;article:section&quot;]" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs sm:text-sm rounded-xl p-2.5 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">سلکتور تاریخ انتشار (Date):</label>
+              <input type="text" id="modalDateSelector" value="time[datetime], meta[property=&quot;article:published_time&quot;], .post-date, .entry-date" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs sm:text-sm rounded-xl p-2.5 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">عناصر مزاحم حذفی (Remove):</label>
+              <input type="text" id="modalRemoveSelectors" value=".advertisement, .ads, .share, .social-share, .comments, nav, footer, script, style, iframe" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs sm:text-sm rounded-xl p-2.5 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-800">
@@ -608,6 +595,17 @@ export function renderDashboardHtml(): string {
       }
     }
 
+    const DEFAULT_SELECTORS = {
+      title_selector: 'h1, .entry-title, .post-title, .jeg_post_title',
+      content_selector: 'article, .post-content, .entry-content, .content-inner, .jeg_inner_content, main',
+      tags_selector: 'a[href*="/tags/"], a[href*="/tag/"], .tags a, .tag a, .post-tags a, [rel="tag"], .jeg_post_tags a',
+      author_selector: '[rel="author"], .author-name, .author, .byline, a[href*="/author/"], .jeg_meta_author a, .jeg_author_name',
+      image_selector: 'meta[property="og:image"], .featured-image img, article img, .entry-content img',
+      category_selector: '.breadcrumb a, .post-category a, .entry-category a, a[href*="/category/"], meta[property="article:section"]',
+      date_selector: 'time[datetime], meta[property="article:published_time"], .post-date, .entry-date',
+      remove_selectors: '.advertisement, .ads, .share, .social-share, .comments, nav, footer, script, style, iframe'
+    };
+
     function openNewSourceModal() {
       document.getElementById('modalTitle').innerText = 'افزودن منبع جدید';
       document.getElementById('modalSourceId').value = '';
@@ -615,14 +613,14 @@ export function renderDashboardHtml(): string {
       document.getElementById('modalCategory').value = 'فناوری';
       document.getElementById('modalSiteUrl').value = '';
       document.getElementById('modalRssUrl').value = '';
-      document.getElementById('modalTitleSelector').value = 'h1';
-      document.getElementById('modalContentSelector').value = 'article, .post-content, .entry-content';
-      document.getElementById('modalRemoveSelectors').value = '.advertisement, .ads, .share, .comments';
-      document.getElementById('modalAuthorSelector').value = '';
-      document.getElementById('modalTagsSelector').value = '';
-      document.getElementById('modalCategorySelector').value = '';
-      document.getElementById('modalImageSelector').value = '';
-      document.getElementById('modalDateSelector').value = '';
+      document.getElementById('modalTitleSelector').value = DEFAULT_SELECTORS.title_selector;
+      document.getElementById('modalContentSelector').value = DEFAULT_SELECTORS.content_selector;
+      document.getElementById('modalTagsSelector').value = DEFAULT_SELECTORS.tags_selector;
+      document.getElementById('modalAuthorSelector').value = DEFAULT_SELECTORS.author_selector;
+      document.getElementById('modalImageSelector').value = DEFAULT_SELECTORS.image_selector;
+      document.getElementById('modalCategorySelector').value = DEFAULT_SELECTORS.category_selector;
+      document.getElementById('modalDateSelector').value = DEFAULT_SELECTORS.date_selector;
+      document.getElementById('modalRemoveSelectors').value = DEFAULT_SELECTORS.remove_selectors;
       document.getElementById('sourceModal').classList.remove('hidden');
     }
 
@@ -635,14 +633,14 @@ export function renderDashboardHtml(): string {
       document.getElementById('modalCategory').value = s.category || 'عمومی';
       document.getElementById('modalSiteUrl').value = s.site_url || '';
       document.getElementById('modalRssUrl').value = s.rss_url || '';
-      document.getElementById('modalTitleSelector').value = s.title_selector || 'h1';
-      document.getElementById('modalContentSelector').value = s.content_selector || 'article, .post-content, .entry-content';
-      document.getElementById('modalRemoveSelectors').value = s.remove_selectors || '';
-      document.getElementById('modalAuthorSelector').value = s.author_selector || '';
-      document.getElementById('modalTagsSelector').value = s.tags_selector || '';
-      document.getElementById('modalCategorySelector').value = s.category_selector || '';
-      document.getElementById('modalImageSelector').value = s.image_selector || '';
-      document.getElementById('modalDateSelector').value = s.date_selector || '';
+      document.getElementById('modalTitleSelector').value = s.title_selector || DEFAULT_SELECTORS.title_selector;
+      document.getElementById('modalContentSelector').value = s.content_selector || DEFAULT_SELECTORS.content_selector;
+      document.getElementById('modalTagsSelector').value = s.tags_selector || DEFAULT_SELECTORS.tags_selector;
+      document.getElementById('modalAuthorSelector').value = s.author_selector || DEFAULT_SELECTORS.author_selector;
+      document.getElementById('modalImageSelector').value = s.image_selector || DEFAULT_SELECTORS.image_selector;
+      document.getElementById('modalCategorySelector').value = s.category_selector || DEFAULT_SELECTORS.category_selector;
+      document.getElementById('modalDateSelector').value = s.date_selector || DEFAULT_SELECTORS.date_selector;
+      document.getElementById('modalRemoveSelectors').value = s.remove_selectors || DEFAULT_SELECTORS.remove_selectors;
       document.getElementById('sourceModal').classList.remove('hidden');
     }
 
@@ -714,14 +712,14 @@ export function renderDashboardHtml(): string {
 
       const s = cachedSources.find(x => String(x.id) === String(selId));
       if (s) {
-        document.getElementById('testTitleSelector').value = s.title_selector || 'h1';
-        document.getElementById('testContentSelector').value = s.content_selector || 'article, .post-content, .entry-content';
-        document.getElementById('testRemoveSelectors').value = s.remove_selectors || '';
-        document.getElementById('testAuthorSelector').value = s.author_selector || '';
-        document.getElementById('testTagsSelector').value = s.tags_selector || '';
-        document.getElementById('testCategorySelector').value = s.category_selector || '';
-        document.getElementById('testImageSelector').value = s.image_selector || '';
-        document.getElementById('testDateSelector').value = s.date_selector || '';
+        document.getElementById('testTitleSelector').value = s.title_selector || DEFAULT_SELECTORS.title_selector;
+        document.getElementById('testContentSelector').value = s.content_selector || DEFAULT_SELECTORS.content_selector;
+        document.getElementById('testTagsSelector').value = s.tags_selector || DEFAULT_SELECTORS.tags_selector;
+        document.getElementById('testAuthorSelector').value = s.author_selector || DEFAULT_SELECTORS.author_selector;
+        document.getElementById('testImageSelector').value = s.image_selector || DEFAULT_SELECTORS.image_selector;
+        document.getElementById('testCategorySelector').value = s.category_selector || DEFAULT_SELECTORS.category_selector;
+        document.getElementById('testDateSelector').value = s.date_selector || DEFAULT_SELECTORS.date_selector;
+        document.getElementById('testRemoveSelectors').value = s.remove_selectors || DEFAULT_SELECTORS.remove_selectors;
         btnSave.disabled = false;
         btnSave.classList.remove('opacity-50', 'cursor-not-allowed');
       }
