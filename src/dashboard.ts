@@ -17,23 +17,23 @@ export function renderDashboardHtml(): string {
     .custom-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
     .custom-scroll::-webkit-scrollbar-thumb:hover { background: #475569; }
 
-    /* استایل‌های استاندارد پیش‌نمایش محتوای وردپرس (Gutenberg Standard) */
-    .wp-rendered-content { line-height: 1.9; font-size: 0.95rem; color: #cbd5e1; }
-    .wp-rendered-content h2 { font-size: 1.4rem; font-weight: 800; color: #38bdf8; margin-top: 1.75rem; margin-bottom: 0.85rem; border-right: 4px solid #38bdf8; padding-right: 0.65rem; }
-    .wp-rendered-content h3 { font-size: 1.2rem; font-weight: 700; color: #7dd3fc; margin-top: 1.4rem; margin-bottom: 0.6rem; }
-    .wp-rendered-content h4 { font-size: 1.05rem; font-weight: 600; color: #bae6fd; margin-top: 1.1rem; margin-bottom: 0.4rem; }
-    .wp-rendered-content p { margin-bottom: 1.15rem; text-align: justify; }
+    /* استایل‌های استاندارد پیش‌نمایش محتوای وردپرس (Gutenberg Standard) با پشتیبانی خودکار از متون فارسی و انگلیسی */
+    .wp-rendered-content { line-height: 1.9; font-size: 0.95rem; color: #cbd5e1; direction: auto; text-align: start; }
+    .wp-rendered-content h2 { font-size: 1.4rem; font-weight: 800; color: #38bdf8; margin-top: 1.75rem; margin-bottom: 0.85rem; border-inline-start: 4px solid #38bdf8; padding-inline-start: 0.65rem; direction: auto; text-align: start; }
+    .wp-rendered-content h3 { font-size: 1.2rem; font-weight: 700; color: #7dd3fc; margin-top: 1.4rem; margin-bottom: 0.6rem; direction: auto; text-align: start; }
+    .wp-rendered-content h4 { font-size: 1.05rem; font-weight: 600; color: #bae6fd; margin-top: 1.1rem; margin-bottom: 0.4rem; direction: auto; text-align: start; }
+    .wp-rendered-content p { margin-bottom: 1.15rem; text-align: start; direction: auto; }
     .wp-rendered-content figure.wp-block-image { margin: 1.75rem 0; text-align: center; }
     .wp-rendered-content figure.wp-block-image img { border-radius: 0.75rem; max-width: 100%; height: auto; margin: 0 auto; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.5); border: 1px solid #334155; }
-    .wp-rendered-content figcaption { font-size: 0.8rem; color: #94a3b8; margin-top: 0.5rem; text-align: center; }
+    .wp-rendered-content figcaption { font-size: 0.8rem; color: #94a3b8; margin-top: 0.5rem; text-align: center; direction: auto; }
     .wp-rendered-content a { color: #38bdf8; text-decoration: underline; text-underline-offset: 3px; }
     .wp-rendered-content a:hover { color: #0284c7; }
-    .wp-rendered-content blockquote.wp-block-quote { border-right: 4px solid #6366f1; background: rgba(99, 102, 241, 0.08); padding: 0.85rem 1.15rem; border-radius: 0.5rem; margin: 1.35rem 0; color: #e2e8f0; font-style: italic; }
-    .wp-rendered-content ul { list-style-type: disc; margin-right: 1.6rem; margin-bottom: 1.15rem; }
-    .wp-rendered-content ol { list-style-type: decimal; margin-right: 1.6rem; margin-bottom: 1.15rem; }
-    .wp-rendered-content li { margin-bottom: 0.4rem; }
+    .wp-rendered-content blockquote.wp-block-quote { border-inline-start: 4px solid #6366f1; background: rgba(99, 102, 241, 0.08); padding: 0.85rem 1.15rem; border-radius: 0.5rem; margin: 1.35rem 0; color: #e2e8f0; font-style: italic; direction: auto; text-align: start; }
+    .wp-rendered-content ul { list-style-type: disc; margin-inline-start: 1.6rem; margin-bottom: 1.15rem; direction: auto; text-align: start; }
+    .wp-rendered-content ol { list-style-type: decimal; margin-inline-start: 1.6rem; margin-bottom: 1.15rem; direction: auto; text-align: start; }
+    .wp-rendered-content li { margin-bottom: 0.4rem; direction: auto; text-align: start; }
     .wp-rendered-content figure.wp-block-table table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.85rem; }
-    .wp-rendered-content figure.wp-block-table th, .wp-rendered-content figure.wp-block-table td { border: 1px solid #334155; padding: 0.5rem 0.75rem; text-align: right; }
+    .wp-rendered-content figure.wp-block-table th, .wp-rendered-content figure.wp-block-table td { border: 1px solid #334155; padding: 0.5rem 0.75rem; text-align: start; }
     .wp-rendered-content figure.wp-block-table th { background: rgba(30,41,59,0.7); color: #f1f5f9; }
   </style>
 </head>
@@ -138,51 +138,60 @@ export function renderDashboardHtml(): string {
             <input type="url" id="testUrl" placeholder="https://example.com/news/1234" class="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs sm:text-sm rounded-xl p-2.5 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
           </div>
 
-          <!-- تنظیم تمام سلکتورهای استخراج (شفاف، با مقادیر واقعی و قابل ویرایش کامل) -->
-          <div class="space-y-2.5">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <!-- تنظیم سلکتورهای استخراج (ساده، متمرکز، بدون کادرهای اضافی، با کنترل ۱۰۰٪ بر تمام عناصر) -->
+          <div class="space-y-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label class="block text-[11px] font-semibold text-slate-300 mb-1">سلکتور تیتر (Title):</label>
-                <input type="text" id="testTitleSelector" value="h1, .entry-title, .post-title, .jeg_post_title" class="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
+                <label class="block text-xs font-semibold text-slate-300 mb-1">سلکتور تیتر خبر (Title):</label>
+                <input type="text" id="testTitleSelector" value="h1, .entry-title, .post-title, .mkd-post-title, .jeg_post_title" class="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2.5 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
               </div>
               <div>
-                <label class="block text-[11px] font-semibold text-slate-300 mb-1">سلکتور محتوا (Content):</label>
-                <input type="text" id="testContentSelector" value="article, .post-content, .entry-content, .content-inner, .jeg_inner_content, main" class="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              <div>
-                <label class="block text-[11px] font-semibold text-slate-300 mb-1">سلکتور برچسب‌ها (Tags):</label>
-                <input type="text" id="testTagsSelector" value="a[href*=&quot;/tags/&quot;], a[href*=&quot;/tag/&quot;], .tags a, .tag a, .post-tags a, [rel=&quot;tag&quot;], .jeg_post_tags a" class="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
-              </div>
-              <div>
-                <label class="block text-[11px] font-semibold text-slate-300 mb-1">سلکتور نویسنده (Author):</label>
-                <input type="text" id="testAuthorSelector" value="[rel=&quot;author&quot;], .author-name, .author, .byline, a[href*=&quot;/author/&quot;], .jeg_meta_author a, .jeg_author_name" class="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
+                <label class="block text-xs font-semibold text-slate-300 mb-1">سلکتور کانتینر محتوا (Content):</label>
+                <input type="text" id="testContentSelector" value=".mkd-post-text-inner, .mkd-post-text, .entry-content, .content-inner, .jeg_inner_content, .post-content, article" class="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2.5 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
               </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              <div>
-                <label class="block text-[11px] font-semibold text-slate-300 mb-1">سلکتور تصویر شاخص (Featured Image):</label>
-                <input type="text" id="testImageSelector" value="meta[property=&quot;og:image&quot;], .featured-image img, article img, .entry-content img" class="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
-              </div>
-              <div>
-                <label class="block text-[11px] font-semibold text-slate-300 mb-1">سلکتور دسته‌بندی (Category):</label>
-                <input type="text" id="testCategorySelector" value=".breadcrumb a, .post-category a, .entry-category a, a[href*=&quot;/category/&quot;], meta[property=&quot;article:section&quot;]" class="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
-              </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">عناصر مزاحم و تبلیغاتی حذفی (Remove):</label>
+              <input type="text" id="testRemoveSelectors" value=".code-block, [class*=&quot;code-block-&quot;], .vv-wrap, [class*=&quot;sponsored&quot;], .sponsored, .dc-vibe-inline, .user-sentiment-vote, .dc-newsletter-cta, .advertisement, .ads, .share, .comments" class="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2.5 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              <div>
-                <label class="block text-[11px] font-semibold text-slate-300 mb-1">سلکتور تاریخ انتشار (Date):</label>
-                <input type="text" id="testDateSelector" value="time[datetime], meta[property=&quot;article:published_time&quot;], .post-date, .entry-date" class="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
+            <!-- کشوی کنترل سایر عناصر (برچسب‌ها، نویسنده، عکس شاخص، دسته، تاریخ) بدون شلوغ کردن صفحه -->
+            <details class="group bg-slate-900/60 border border-slate-800 rounded-xl overflow-hidden transition-all">
+              <summary class="flex items-center justify-between px-3.5 py-2 cursor-pointer text-xs font-semibold text-slate-300 hover:text-cyan-400 select-none bg-slate-900/90">
+                <span class="flex items-center gap-1.5 font-bold">
+                  <svg class="w-3.5 h-3.5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+                  <span>سایر سلکتورها (برچسب‌ها، نویسنده، عکس شاخص، دسته، تاریخ)</span>
+                </span>
+                <span class="text-[10px] text-slate-400 group-open:rotate-180 transition-transform">▼</span>
+              </summary>
+              <div class="p-3 border-t border-slate-800/80 space-y-2.5 bg-slate-950/40">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div>
+                    <label class="block text-[11px] font-semibold text-slate-300 mb-1">سلکتور برچسب‌ها (Tags):</label>
+                    <input type="text" id="testTagsSelector" value="a[href*=&quot;/tags/&quot;], a[href*=&quot;/tag/&quot;], .tags a, .tag a, .post-tags a, [rel=&quot;tag&quot;], .jeg_post_tags a" class="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
+                  </div>
+                  <div>
+                    <label class="block text-[11px] font-semibold text-slate-300 mb-1">سلکتور نویسنده (Author):</label>
+                    <input type="text" id="testAuthorSelector" value="[rel=&quot;author&quot;], .author-name, .author, .byline, a[href*=&quot;/author/&quot;], .jeg_meta_author a, .jeg_author_name" class="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
+                  </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div>
+                    <label class="block text-[11px] font-semibold text-slate-300 mb-1">سلکتور تصویر شاخص (Featured Image):</label>
+                    <input type="text" id="testImageSelector" value="meta[property=&quot;og:image&quot;], .featured-image img, article img, .entry-content img" class="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
+                  </div>
+                  <div>
+                    <label class="block text-[11px] font-semibold text-slate-300 mb-1">سلکتور دسته‌بندی (Category):</label>
+                    <input type="text" id="testCategorySelector" value=".breadcrumb a, .post-category a, .entry-category a, a[href*=&quot;/category/&quot;], meta[property=&quot;article:section&quot;]" class="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-[11px] font-semibold text-slate-300 mb-1">سلکتور تاریخ انتشار (Date):</label>
+                  <input type="text" id="testDateSelector" value="time[datetime], meta[property=&quot;article:published_time&quot;], .post-date, .entry-date" class="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
+                </div>
               </div>
-              <div>
-                <label class="block text-[11px] font-semibold text-slate-300 mb-1">عناصر مزاحم حذفی (Remove):</label>
-                <input type="text" id="testRemoveSelectors" value=".advertisement, .ads, .share, .social-share, .comments, nav, footer, script, style, iframe" class="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
-              </div>
-            </div>
+            </details>
           </div>
 
           <div class="flex items-center gap-2 pt-1">
@@ -363,51 +372,60 @@ export function renderDashboardHtml(): string {
           </div>
         </div>
 
-        <!-- تنظیم سلکتورهای استخراج وردپرس (همگی شفاف، عیان و قابل ویرایش کامل) -->
+        <!-- تنظیم سلکتورهای استخراج وردپرس (طراحی خلوت و متمرکز، بدون کادرهای اضافی، با کنترل ۱۰۰٪ بر تمام عناصر) -->
         <div class="space-y-3 pt-1 border-t border-slate-800/80">
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label class="block text-xs font-semibold text-slate-300 mb-1">سلکتور تیتر خبر (Title):</label>
-              <input type="text" id="modalTitleSelector" value="h1, .entry-title, .post-title, .jeg_post_title" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs sm:text-sm rounded-xl p-2.5 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
+              <input type="text" id="modalTitleSelector" value="h1, .entry-title, .post-title, .mkd-post-title, .jeg_post_title" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs sm:text-sm rounded-xl p-2.5 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
             </div>
             <div>
               <label class="block text-xs font-semibold text-slate-300 mb-1">سلکتور محتوا (Content):</label>
-              <input type="text" id="modalContentSelector" value="article, .post-content, .entry-content, .content-inner, .jeg_inner_content, main" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs sm:text-sm rounded-xl p-2.5 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
+              <input type="text" id="modalContentSelector" value=".mkd-post-text-inner, .mkd-post-text, .entry-content, .content-inner, .jeg_inner_content, .post-content, article" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs sm:text-sm rounded-xl p-2.5 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
             </div>
           </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs font-semibold text-slate-300 mb-1">سلکتور برچسب‌ها (Tags):</label>
-              <input type="text" id="modalTagsSelector" value="a[href*=&quot;/tags/&quot;], a[href*=&quot;/tag/&quot;], .tags a, .tag a, .post-tags a, [rel=&quot;tag&quot;], .jeg_post_tags a" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs sm:text-sm rounded-xl p-2.5 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
-            </div>
-            <div>
-              <label class="block text-xs font-semibold text-slate-300 mb-1">سلکتور نویسنده (Author):</label>
-              <input type="text" id="modalAuthorSelector" value="[rel=&quot;author&quot;], .author-name, .author, .byline, a[href*=&quot;/author/&quot;], .jeg_meta_author a, .jeg_author_name" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs sm:text-sm rounded-xl p-2.5 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
-            </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">عناصر مزاحم و تبلیغاتی حذفی (Remove):</label>
+            <input type="text" id="modalRemoveSelectors" value=".code-block, [class*=&quot;code-block-&quot;], .vv-wrap, [class*=&quot;sponsored&quot;], .sponsored, .dc-vibe-inline, .user-sentiment-vote, .dc-newsletter-cta, .advertisement, .ads, .share, .comments" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs sm:text-sm rounded-xl p-2.5 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
           </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs font-semibold text-slate-300 mb-1">سلکتور تصویر شاخص (Featured Image):</label>
-              <input type="text" id="modalImageSelector" value="meta[property=&quot;og:image&quot;], .featured-image img, article img, .entry-content img" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs sm:text-sm rounded-xl p-2.5 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
+          <!-- کشوی تنظیم سایر سلکتورها -->
+          <details class="group bg-slate-950/60 border border-slate-800 rounded-xl overflow-hidden transition-all">
+            <summary class="flex items-center justify-between px-3.5 py-2 cursor-pointer text-xs font-semibold text-slate-300 hover:text-cyan-400 select-none bg-slate-950/90">
+              <span class="flex items-center gap-1.5 font-bold">
+                <svg class="w-3.5 h-3.5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+                <span>سایر سلکتورها (برچسب‌ها، نویسنده، عکس شاخص، دسته، تاریخ)</span>
+              </span>
+              <span class="text-[10px] text-slate-400 group-open:rotate-180 transition-transform">▼</span>
+            </summary>
+            <div class="p-3 border-t border-slate-800/80 space-y-2.5 bg-slate-950">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div>
+                  <label class="block text-[11px] font-semibold text-slate-300 mb-1">سلکتور برچسب‌ها (Tags):</label>
+                  <input type="text" id="modalTagsSelector" value="a[href*=&quot;/tags/&quot;], a[href*=&quot;/tag/&quot;], .tags a, .tag a, .post-tags a, [rel=&quot;tag&quot;], .jeg_post_tags a" class="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
+                </div>
+                <div>
+                  <label class="block text-[11px] font-semibold text-slate-300 mb-1">سلکتور نویسنده (Author):</label>
+                  <input type="text" id="modalAuthorSelector" value="[rel=&quot;author&quot;], .author-name, .author, .byline, a[href*=&quot;/author/&quot;], .jeg_meta_author a, .jeg_author_name" class="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
+                </div>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div>
+                  <label class="block text-[11px] font-semibold text-slate-300 mb-1">سلکتور تصویر شاخص (Featured Image):</label>
+                  <input type="text" id="modalImageSelector" value="meta[property=&quot;og:image&quot;], .featured-image img, article img, .entry-content img" class="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
+                </div>
+                <div>
+                  <label class="block text-[11px] font-semibold text-slate-300 mb-1">سلکتور دسته‌بندی (Category):</label>
+                  <input type="text" id="modalCategorySelector" value=".breadcrumb a, .post-category a, .entry-category a, a[href*=&quot;/category/&quot;], meta[property=&quot;article:section&quot;]" class="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
+                </div>
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-300 mb-1">سلکتور تاریخ انتشار (Date):</label>
+                <input type="text" id="modalDateSelector" value="time[datetime], meta[property=&quot;article:published_time&quot;], .post-date, .entry-date" class="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
+              </div>
             </div>
-            <div>
-              <label class="block text-xs font-semibold text-slate-300 mb-1">سلکتور دسته‌بندی (Category):</label>
-              <input type="text" id="modalCategorySelector" value=".breadcrumb a, .post-category a, .entry-category a, a[href*=&quot;/category/&quot;], meta[property=&quot;article:section&quot;]" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs sm:text-sm rounded-xl p-2.5 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
-            </div>
-          </div>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs font-semibold text-slate-300 mb-1">سلکتور تاریخ انتشار (Date):</label>
-              <input type="text" id="modalDateSelector" value="time[datetime], meta[property=&quot;article:published_time&quot;], .post-date, .entry-date" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs sm:text-sm rounded-xl p-2.5 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
-            </div>
-            <div>
-              <label class="block text-xs font-semibold text-slate-300 mb-1">عناصر مزاحم حذفی (Remove):</label>
-              <input type="text" id="modalRemoveSelectors" value=".advertisement, .ads, .share, .social-share, .comments, nav, footer, script, style, iframe" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs sm:text-sm rounded-xl p-2.5 focus:border-cyan-500 focus:outline-none dir-ltr text-left">
-            </div>
-          </div>
+          </details>
         </div>
       </div>
 
@@ -596,14 +614,14 @@ export function renderDashboardHtml(): string {
     }
 
     const DEFAULT_SELECTORS = {
-      title_selector: 'h1, .entry-title, .post-title, .jeg_post_title',
-      content_selector: 'article, .post-content, .entry-content, .content-inner, .jeg_inner_content, main',
+      title_selector: 'h1, .entry-title, .post-title, .mkd-post-title, .jeg_post_title',
+      content_selector: '.mkd-post-text-inner, .mkd-post-text, .entry-content, .content-inner, .jeg_inner_content, .post-content, article',
       tags_selector: 'a[href*="/tags/"], a[href*="/tag/"], .tags a, .tag a, .post-tags a, [rel="tag"], .jeg_post_tags a',
       author_selector: '[rel="author"], .author-name, .author, .byline, a[href*="/author/"], .jeg_meta_author a, .jeg_author_name',
       image_selector: 'meta[property="og:image"], .featured-image img, article img, .entry-content img',
       category_selector: '.breadcrumb a, .post-category a, .entry-category a, a[href*="/category/"], meta[property="article:section"]',
       date_selector: 'time[datetime], meta[property="article:published_time"], .post-date, .entry-date',
-      remove_selectors: '.advertisement, .ads, .share, .social-share, .comments, nav, footer, script, style, iframe'
+      remove_selectors: '.code-block, [class*="code-block-"], .vv-wrap, [class*="sponsored"], .sponsored, .dc-vibe-inline, .user-sentiment-vote, .dc-newsletter-cta, .advertisement, .ads, .share, .comments'
     };
 
     function openNewSourceModal() {
@@ -1052,16 +1070,16 @@ export function renderDashboardHtml(): string {
       const canonical = (seoMeta && seoMeta.canonical_url) || wpPost.link || fallbackUrl || '#';
 
       return \`
-        <div class="space-y-5 max-w-4xl mx-auto pb-6">
+        <div class="space-y-5 max-w-4xl mx-auto pb-6 text-start" dir="auto">
 
           <!-- نوار دسته‌بندی‌ها -->
-          <div class="flex flex-wrap items-center gap-1.5">
+          <div class="flex flex-wrap items-center gap-1.5" dir="auto">
             <span class="text-[11px] font-bold text-slate-400 ml-1">دسته‌بندی‌ها:</span>
             \${categories.map(c => \`<span class="px-2.5 py-0.5 rounded-lg bg-blue-500/15 text-blue-300 border border-blue-500/30 text-xs font-semibold">\${escapeHtml(c)}</span>\`).join('')}
           </div>
 
           <!-- تیتر اصلی خبر -->
-          <h1 class="text-xl sm:text-2xl lg:text-3xl font-extrabold text-white leading-snug tracking-tight">
+          <h1 class="text-xl sm:text-2xl lg:text-3xl font-extrabold text-white leading-snug tracking-tight text-start" dir="auto">
             \${escapeHtml(title)}
           </h1>
 
@@ -1127,7 +1145,7 @@ export function renderDashboardHtml(): string {
               <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
               محتوای ساختاریافته گوتنبرگ (Gutenberg Content):
             </div>
-            <div class="wp-rendered-content bg-slate-900/70 p-5 sm:p-7 rounded-2xl border border-slate-800">
+            <div class="wp-rendered-content bg-slate-900/70 p-5 sm:p-7 rounded-2xl border border-slate-800 text-start" dir="auto">
               \${contentHtml}
             </div>
           </div>

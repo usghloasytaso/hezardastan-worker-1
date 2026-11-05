@@ -142,12 +142,13 @@ export function cleanAndParseHtml(
     // =========================================================================
     // ۱۱. تمیزسازی و یافتن کانتینر بدنه مقاله برای خروجی گوتنبرگ
     // =========================================================================
-    // حذف عناصر زائد سراسری مخرب (اسکریپت‌ها، بنرهای تبلیغاتی، منوها، فرم‌ها، فوترها)
+    // حذف عناصر زائد سراسری مخرب (اسکریپت‌ها، بنرهای تبلیغاتی، ویجت‌های شرط‌بندی، نظرخواهی، منوها، فرم‌ها، فوترها)
     const dangerousElements = [
       'script',
       'style',
       'noscript',
       'iframe[src*="google"]',
+      'iframe[src*="doubleclick"]',
       'iframe[src*="ad"]',
       'svg',
       'canvas',
@@ -163,53 +164,101 @@ export function cleanAndParseHtml(
       '#comments',
       '.comment-section',
       '.social-share',
-      '.share-buttons'
+      '.share-buttons',
+      '.code-block',
+      '[class*="code-block-"]',
+      '[id*="code-block-"]',
+      '.vv-wrap',
+      '.vv-head',
+      '[class*="vv-"]',
+      '[class*="sponsored"]',
+      '[id*="sponsored"]',
+      '.sponsored',
+      '.dc-vibe-inline',
+      '.user-sentiment-vote',
+      '[class*="vibe-inline"]',
+      '[class*="sentiment-vote"]',
+      '.dc-newsletter-cta',
+      '[class*="newsletter-cta"]',
+      '[class*="newsletter-box"]',
+      '.mkd-breadcrumbs',
+      '.breadcrumb',
+      '.breadcrumbs',
+      '.yoast-breadcrumbs',
+      '.rank-math-breadcrumb',
+      '.mkd-post-info',
+      '.mkd-author-description',
+      '.mkd-single-tags-share-holder',
+      '.entry-meta',
+      '.post-meta'
     ];
     $(dangerousElements.join(', ')).remove();
 
     // حذف سلکتورهای اختصاصی منبع (در صورتی که در تنظیمات منبع ثبت شده باشد)
     if (source.remove_selectors && source.remove_selectors.trim()) {
-      try {
-        $(source.remove_selectors).remove();
-      } catch (e) {
-        console.warn('خطا در اعمال remove_selectors:', e);
+      const rmList = source.remove_selectors.split(',').map((s: string) => s.trim()).filter(Boolean);
+      for (const sel of rmList) {
+        try {
+          $(sel).remove();
+        } catch (e) {
+          console.warn('خطا در اعمال remove_selector:', sel, e);
+        }
       }
     }
 
-    // یافتن کانتینر بدنه مقاله
+    // یافتن کانتینر بدنه مقاله (بررسی ترتیبی کاندیداها به جای ارزیابی همزمان درختی)
     let $root: any = null;
     if (source.content_selector && source.content_selector.trim()) {
-      try {
-        const found = $(source.content_selector);
-        if (found.length > 0) $root = found.first();
-      } catch {}
+      const candidates = source.content_selector.split(',').map((s: string) => s.trim()).filter(Boolean);
+      for (const sel of candidates) {
+        try {
+          const found = $(sel);
+          if (found.length > 0) {
+            $root = found.first();
+            break;
+          }
+        } catch {}
+      }
     }
 
     if (!$root || $root.length === 0) {
       const fallbacks = [
-        'article',
-        '[itemprop="articleBody"]',
+        '.mkd-post-text-inner',
+        '.mkd-post-text',
         '.post-content',
         '.entry-content',
+        '.content-inner',
+        '.jeg_inner_content',
         '.article-content',
         '.article-body',
         '.story-body',
         '.news-body',
         '.content-text',
         '.main-content',
+        '[itemprop="articleBody"]',
+        'article',
         'main'
       ];
       for (const sel of fallbacks) {
-        const el = $(sel);
-        if (el.length > 0) {
-          $root = el.first();
-          break;
-        }
+        try {
+          const el = $(sel);
+          if (el.length > 0) {
+            $root = el.first();
+            break;
+          }
+        } catch {}
       }
     }
 
     if (!$root || $root.length === 0) {
       $root = $('body');
+    }
+
+    // پاکسازی عناصر هدر و تبلیغات تکراری از درون کانتینر انتخاب‌شده
+    if ($root && $root.length > 0) {
+      $root.find('h1, .entry-title, .post-title, .mkd-post-title').remove();
+      $root.find('.mkd-post-image, .featured-image, .post-thumbnail, .post-featured-image, .entry-thumbnail, .mkd-post-info, .mkd-breadcrumbs').remove();
+      $root.find('.code-block, [class*="code-block-"], .vv-wrap, [class*="sponsored"], .dc-vibe-inline, .dc-newsletter-cta').remove();
     }
 
     // =========================================================================
