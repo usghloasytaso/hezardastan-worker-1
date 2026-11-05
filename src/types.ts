@@ -7,6 +7,11 @@ export interface Source {
   is_active: number; // 1 for active, 0 for inactive
   title_selector?: string;
   content_selector?: string;
+  author_selector?: string;
+  tags_selector?: string;
+  category_selector?: string;
+  image_selector?: string;
+  date_selector?: string;
   remove_selectors?: string;
   custom_script?: string;
   created_at?: string;

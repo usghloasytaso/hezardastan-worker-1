@@ -10,9 +10,14 @@ export async function initDatabase(db: D1Database): Promise<void> {
         rss_url TEXT NOT NULL,
         category TEXT DEFAULT 'عمومی',
         is_active INTEGER NOT NULL DEFAULT 1,
-        title_selector TEXT DEFAULT 'h1',
-        content_selector TEXT DEFAULT 'article, .post-content, .entry-content, .article-body, .story-body',
-        remove_selectors TEXT DEFAULT '.advertisement, .ads, .related-posts, .share-buttons, .social-share, .tags, nav, footer, script, style, iframe, .comments',
+        title_selector TEXT DEFAULT 'h1, .entry-title, .post-title',
+        content_selector TEXT DEFAULT 'article, .post-content, .entry-content, .article-body, .story-body, main',
+        author_selector TEXT DEFAULT '[rel="author"], .author-name, .author, .byline, a[href*="/author/"]',
+        tags_selector TEXT DEFAULT 'a[href*="/tags/"], a[href*="/tag/"], .tags a, .tag a, .post-tags a, [rel="tag"], .jeg_post_tags a',
+        category_selector TEXT DEFAULT '.breadcrumb a, .post-category a, .entry-category a',
+        image_selector TEXT DEFAULT 'meta[property="og:image"], .featured-image img, article img',
+        date_selector TEXT DEFAULT 'time[datetime], meta[property="article:published_time"], .post-date',
+        remove_selectors TEXT DEFAULT '.advertisement, .ads, .related-posts, .share-buttons, .social-share, nav, footer, script, style, iframe, .comments',
         custom_script TEXT DEFAULT '',
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -31,6 +36,8 @@ export async function initDatabase(db: D1Database): Promise<void> {
         json_content TEXT,
         featured_image TEXT,
         excerpt TEXT,
+        author_name TEXT,
+        tags TEXT,
         published_at TEXT,
         scraped_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         status TEXT NOT NULL DEFAULT 'آماده پردازش',
@@ -68,8 +75,13 @@ export async function getSourceById(db: D1Database, id: number): Promise<Source 
 export async function createSource(db: D1Database, source: Source): Promise<number> {
   const result = await db
     .prepare(`
-      INSERT INTO sources (name, site_url, rss_url, category, is_active, title_selector, content_selector, remove_selectors, custom_script)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO sources (
+        name, site_url, rss_url, category, is_active,
+        title_selector, content_selector, author_selector, tags_selector,
+        category_selector, image_selector, date_selector,
+        remove_selectors, custom_script
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `)
     .bind(
       source.name || '',
@@ -77,9 +89,14 @@ export async function createSource(db: D1Database, source: Source): Promise<numb
       source.rss_url || '',
       source.category || 'عمومی',
       source.is_active ?? 1,
-      source.title_selector || 'h1',
-      source.content_selector || 'article, .post-content, .entry-content',
-      source.remove_selectors || '',
+      source.title_selector || 'h1, .entry-title, .post-title',
+      source.content_selector || 'article, .post-content, .entry-content, .article-body, .story-body, main',
+      source.author_selector || '[rel="author"], .author-name, .author, .byline, a[href*="/author/"]',
+      source.tags_selector || 'a[href*="/tags/"], a[href*="/tag/"], .tags a, .tag a, .post-tags a, [rel="tag"], .jeg_post_tags a',
+      source.category_selector || '.breadcrumb a, .post-category a, .entry-category a',
+      source.image_selector || 'meta[property="og:image"], .featured-image img, article img',
+      source.date_selector || 'time[datetime], meta[property="article:published_time"], .post-date',
+      source.remove_selectors || '.advertisement, .ads, .related-posts, .share-buttons, .social-share, nav, footer, script, style, iframe, .comments',
       source.custom_script || ''
     )
     .run();
@@ -99,7 +116,9 @@ export async function updateSource(
     .prepare(`
       UPDATE sources
       SET name = ?, site_url = ?, rss_url = ?, category = ?, is_active = ?,
-          title_selector = ?, content_selector = ?, remove_selectors = ?, custom_script = ?,
+          title_selector = ?, content_selector = ?, author_selector = ?, tags_selector = ?,
+          category_selector = ?, image_selector = ?, date_selector = ?,
+          remove_selectors = ?, custom_script = ?,
           updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `)
@@ -111,6 +130,11 @@ export async function updateSource(
       source.is_active ?? current.is_active,
       source.title_selector ?? current.title_selector,
       source.content_selector ?? current.content_selector,
+      source.author_selector ?? current.author_selector,
+      source.tags_selector ?? current.tags_selector,
+      source.category_selector ?? current.category_selector,
+      source.image_selector ?? current.image_selector,
+      source.date_selector ?? current.date_selector,
       source.remove_selectors ?? current.remove_selectors,
       source.custom_script ?? current.custom_script,
       id

@@ -85,6 +85,11 @@ app.post('/api/extract/test', async (c) => {
     url: string;
     title_selector?: string;
     content_selector?: string;
+    author_selector?: string;
+    tags_selector?: string;
+    category_selector?: string;
+    image_selector?: string;
+    date_selector?: string;
     remove_selectors?: string;
     custom_script?: string;
   }>();
@@ -96,6 +101,11 @@ app.post('/api/extract/test', async (c) => {
   const result = await extractArticleContent(body.url, {
     title_selector: body.title_selector,
     content_selector: body.content_selector,
+    author_selector: body.author_selector,
+    tags_selector: body.tags_selector,
+    category_selector: body.category_selector,
+    image_selector: body.image_selector,
+    date_selector: body.date_selector,
     remove_selectors: body.remove_selectors,
     custom_script: body.custom_script
   });
